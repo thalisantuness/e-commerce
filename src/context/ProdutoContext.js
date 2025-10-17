@@ -1,42 +1,42 @@
-// context/ImovelContext.js
+// context/ProdutoContext.js
 import { createContext, useContext, useState } from "react";
 
-const ImovelContext = createContext();
+const ProdutoContext = createContext();
 
-export const ImovelProvider = ({ children }) => {
+export const ProdutoProvider = ({ children }) => {
   const [filtros, setFiltros] = useState({});
   const [carrinho, setCarrinho] = useState([]);
 
   // Adicionar item ao carrinho
-  const adicionarAoCarrinho = (imovel) => {
+  const adicionarAoCarrinho = (produto) => {
     setCarrinho(prev => {
-      const existingItem = prev.find(item => item.imovel_id === imovel.imovel_id);
+      const existingItem = prev.find(item => item.produto_id === produto.produto_id);
       if (existingItem) {
         return prev.map(item =>
-          item.imovel_id === imovel.imovel_id
+          item.produto_id === produto.produto_id
             ? { ...item, quantidade: item.quantidade + 1 }
             : item
         );
       } else {
-        return [...prev, { ...imovel, quantidade: 1 }];
+        return [...prev, { ...produto, quantidade: 1 }];
       }
     });
   };
 
   // Remover item do carrinho
-  const removerDoCarrinho = (imovelId) => {
-    setCarrinho(prev => prev.filter(item => item.imovel_id !== imovelId));
+  const removerDoCarrinho = (produtoId) => {
+    setCarrinho(prev => prev.filter(item => item.produto_id !== produtoId));
   };
 
   // Ajustar quantidade
-  const ajustarQuantidade = (imovelId, novaQuantidade) => {
+  const ajustarQuantidade = (produtoId, novaQuantidade) => {
     if (novaQuantidade < 1) {
-      removerDoCarrinho(imovelId);
+      removerDoCarrinho(produtoId);
       return;
     }
     setCarrinho(prev =>
       prev.map(item =>
-        item.imovel_id === imovelId
+        item.produto_id === produtoId
           ? { ...item, quantidade: novaQuantidade }
           : item
       )
@@ -59,7 +59,7 @@ export const ImovelProvider = ({ children }) => {
   };
 
   return (
-    <ImovelContext.Provider value={{ 
+    <ProdutoContext.Provider value={{ 
       filtros, 
       setFiltros,
       carrinho,
@@ -71,10 +71,10 @@ export const ImovelProvider = ({ children }) => {
       calcularQuantidadeTotal
     }}>
       {children}
-    </ImovelContext.Provider>
+    </ProdutoContext.Provider>
   );
 };
 
-export const useImovel = () => {
-  return useContext(ImovelContext);
+export const useProduto = () => {
+  return useContext(ProdutoContext);
 };

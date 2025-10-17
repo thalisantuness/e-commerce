@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaSignOutAlt, FaShoppingCart, FaSearch } from "react-icons/fa";
-import { useImovel } from "../../context/ImovelContext";
+import { useProduto } from "../../context/ProdutoContext";
 import Logo from "../../assets/logo-transparente.png";
 import "./styles.css";
 
@@ -11,7 +11,7 @@ export default function NavBar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
-  const { calcularQuantidadeTotal } = useImovel();
+  const { calcularQuantidadeTotal } = useProduto();
 
   useEffect(() => {
     const token = localStorage.getItem("token");

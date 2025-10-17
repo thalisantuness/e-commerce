@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaCar, FaBath, FaBed, FaTrash, FaEdit } from "react-icons/fa";
 import axios from "axios";
-import { useImovel } from "../../context/ImovelContext";
+import { useProduto } from "../../context/ProdutoContext";
 import "./styles.css";
 import { ToastContainer, toast } from 'react-toastify';
 import { Link } from "react-router-dom";
@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 function ImovelListAdmin() {
   const [imoveis, setImoveis] = useState([]);
   const [notFound, setNotFound] = useState(false);
-  const { filtros } = useImovel();
+  const { filtros } = useProduto();
 
   useEffect(() => {
     const fetchImoveis = async () => {

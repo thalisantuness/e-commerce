@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../../pages/imovel-details/style.css";
+import "../../pages/product-details/style.css";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 function ImovelCarrouselDetail({ imovel }) {

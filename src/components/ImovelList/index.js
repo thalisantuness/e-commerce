@@ -3,14 +3,14 @@ import { FaCar, FaBath, FaBed, FaBuilding } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useImovel } from "../../context/ImovelContext";
+import { useProduto } from "../../context/ProdutoContext";
 import "./styles.css";
 
 function ImovelList() {
   const [imoveis, setImoveis] = useState([]);
   const [notFound, setNotFound] = useState(false);
   // O 'setImovelId' foi removido pois não será mais necessário no contexto
-  const { filtros } = useImovel();
+  const { filtros } = useProduto();
   const navigate = useNavigate();
 
   const formatCurrency = (value) => {

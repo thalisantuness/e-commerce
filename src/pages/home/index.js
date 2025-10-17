@@ -1,7 +1,7 @@
 import React from "react";
 import NavBar from "../../components/NavBar/index";
 import BannerPrimary from "../../components/BannerPrimary/index";
-import OurSolutions from "../../components/OurSolutions/index";
+import HomeProducts from "../../components/HomeProducts/index";
 import Footer from "../../components/Footer/index";
 import ReactWhatsappButton from "react-whatsapp-button";
 import Statistics from "../../components/Statistics";
@@ -16,7 +16,7 @@ function Home() {
       <NavBar />
       <main className="home-content">
         <BannerPrimary />
-        <OurSolutions />
+        <HomeProducts />
         <Statistics />
         {/* <Blog /> */}
         {/* <Companies /> */}

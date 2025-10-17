@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useImovel } from "../../context/ImovelContext";
+import { useProduto } from "../../context/ProdutoContext";
 import { FaSearch, FaChevronDown, FaTimes } from "react-icons/fa";
 import "./styles.css";
 
@@ -13,7 +13,7 @@ function ImovelFilter() {
   const [selectedParking, setSelectedParking] = useState("");
   const [selectedBathrooms, setSelectedBathrooms] = useState("");
 
-  const { setFiltros } = useImovel();
+  const { setFiltros } = useProduto();
 
   useEffect(() => {
     const fetchCities = async () => {

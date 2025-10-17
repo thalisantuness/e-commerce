@@ -1,5 +1,5 @@
 /* Estilos gerais */
-.imovel-details-page {
+.product-details-page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -8,7 +8,7 @@
   font-family: 'Inter', sans-serif;
 }
 
-.imovel-details-container {
+.product-details-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
@@ -320,6 +320,82 @@
   margin-bottom: 1.5rem;
 }
 
+/* Estilos específicos para produtos */
+.product-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (min-width: 992px) {
+  .product-content-wrapper {
+    flex-direction: row;
+  }
+  
+  .product-media-section {
+    flex: 1.5;
+  }
+  
+  .product-info-section {
+    flex: 1;
+  }
+}
+
+/* Textos em preto para produtos */
+.product-text-black {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+.property-title.product-text-black {
+  color: #000000 !important;
+  font-weight: 700;
+  font-size: 1.75rem;
+}
+
+.price-value.product-text-black {
+  color: #000000 !important;
+  font-weight: 700;
+  font-size: 1.75rem;
+}
+
+/* Ajustes para features de produtos */
+.property-features .feature-item span.product-text-black {
+  color: #000000 !important;
+  font-weight: 500;
+}
+
+/* Ajuste para lista de detalhes */
+.details-list li.product-text-black {
+  color: #000000 !important;
+  font-weight: 500;
+}
+
+.details-list li.product-text-black strong {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Botão do WhatsApp */
+.contact-button {
+  background-color: #25D366;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.contact-button:hover {
+  background-color: #128C7E;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 @media (min-width: 768px) {
   .property-details-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -385,7 +461,7 @@
 }
 
 @media (max-width: 480px) {
-  .imovel-details-container {
+  .product-details-container {
     padding: 1rem;
   }
   

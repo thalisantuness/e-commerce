@@ -1,4 +1,4 @@
-/* styles.css - OurSolutions como E-commerce - CLASSES ESPECÍFICAS */
+/* styles.css - HomeProducts como E-commerce - CLASSES ESPECÍFICAS */
 .our-solutions-section {
   padding: 4rem 0;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -419,4 +419,75 @@
 
 .container {
   all: unset !important;
+}
+
+.our-solutions-category {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #718096;
+}
+
+.our-solutions-category-icon {
+  font-size: 1rem;
+}
+
+.our-solutions-cost {
+  font-size: 0.85rem;
+  color: #718096;
+  margin-top: 0.25rem;
+}
+
+.our-solutions-feature-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Ajuste para badges de produtos */
+.our-solutions-badge {
+  background: #3182ce;
+}
+
+.our-solutions-badge[data-type="Promoção"] {
+  background: #e53e3e;
+}
+
+.our-solutions-badge[data-type="Venda"] {
+  background: #38a169;
+}
+
+/* Estilos para textos em preto */
+.our-solutions-text-black {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+.our-solutions-feature-text-black {
+  color: #000000 !important;
+  font-weight: 500;
+}
+
+/* Ajuste específico para o título */
+.our-solutions-title.our-solutions-text-black {
+  color: #000000 !important;
+  font-weight: 700;
+}
+
+/* Ajuste específico para o preço */
+.our-solutions-price-number.our-solutions-text-black {
+  color: #000000 !important;
+  font-weight: 700;
+}
+
+/* Ajuste para a categoria */
+.our-solutions-category .our-solutions-text-black {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Remove o estilo de custo se ainda existir */
+.our-solutions-cost {
+  display: none !important;
 }

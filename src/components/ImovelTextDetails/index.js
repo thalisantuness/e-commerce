@@ -1,7 +1,7 @@
 import React from "react";
 import { FaCar, FaBath, FaBed, FaRulerCombined, FaMoneyBillWave, FaBuilding } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
-import "../../pages/imovel-details/style.css";
+import "../../pages/product-details/style.css";
 
 function ImovelTextDetails({ imovel }) {
   const formatCurrency = (value) => {
