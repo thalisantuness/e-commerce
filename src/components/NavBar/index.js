@@ -15,7 +15,7 @@ export default function NavBar() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const user = localStorage.getItem("userName");
+    const user = localStorage.getItem("user_name") || localStorage.getItem("userName");
     
     if (token) {
       setIsLoggedIn(true);
@@ -25,7 +25,13 @@ export default function NavBar() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("auth_token");
     localStorage.removeItem("userName");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_type");
+    localStorage.removeItem("user_phone");
     setIsLoggedIn(false);
     setUserName("");
     setShowDropdown(false);
@@ -74,9 +80,11 @@ export default function NavBar() {
 
         {/* Menu de Navegação */}
         <nav className="nav-links">
+          <Link to="/produto-list" className="nav-link">Produtos</Link>
           <Link to="/imovel-list" className="nav-link">Imóveis</Link>
-          <Link to="/sobre-nos" className="nav-link">Sobre Nós</Link>
-          <Link to="/contato" className="nav-link">Contato</Link>
+          {isLoggedIn && (
+            <Link to="/meus-pedidos" className="nav-link">Meus Pedidos</Link>
+          )}
         </nav>
 
         {/* Área do Usuário */}

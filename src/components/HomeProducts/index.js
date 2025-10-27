@@ -18,7 +18,13 @@ function HomeProducts() {
         const response = await axios.get(
           "https://back-pdv-production.up.railway.app/produtos"
         );
-        setProdutos(response.data.slice(0, 6));
+        
+        // Filtrar apenas produtos do e-commerce
+        const produtosEcommerce = response.data.filter(produto => 
+          produto.menu === 'ecommerce' || produto.menu === 'ambos'
+        );
+        
+        setProdutos(produtosEcommerce.slice(0, 6));
         setLoading(false);
       } catch (error) {
         console.error("Erro ao buscar produtos:", error);
@@ -34,6 +40,16 @@ function HomeProducts() {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
+  };
+
+  // Função para obter a URL da imagem do produto
+  const getImageUrl = (produto) => {
+    // Tenta diferentes campos possíveis para a imagem
+    return produto.foto_principal || 
+           produto.imageData || 
+           produto.image || 
+           produto.url_imagem || 
+           'https://via.placeholder.com/300x200?text=Sem+Imagem';
   };
 
   const handleAdicionarCarrinho = (e, produto) => {
@@ -103,7 +119,7 @@ function HomeProducts() {
               >
                 <div className="our-solutions-image-container">
                   <img 
-                    src={produto.foto_principal} 
+                    src={getImageUrl(produto)} 
                     alt={produto.nome}
                     className="our-solutions-image"
                     onError={(e) => {

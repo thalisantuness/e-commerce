@@ -20,12 +20,14 @@ export default function FormLogin() {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://api-corretora-production.up.railway.app/usuarios/login",
+        "https://back-pdv-production.up.railway.app/login",
         formData,
         { headers: { "Content-Type": "application/json" } }
       ); 
       
       const token = response.data.token;
+      const usuario = response.data.usuario;
+      
       if (token) {
           toast.success("Login realizado com sucesso!", {
                 position: "top-right",
@@ -37,7 +39,20 @@ export default function FormLogin() {
                 progress: undefined,
                 theme: "colored",
               });
-        localStorage.setItem("token", token); 
+        
+        // Salvar token e informações do usuário
+        localStorage.setItem("token", token);
+        
+        if (usuario) {
+          localStorage.setItem("user_id", usuario.usuario_id);
+          localStorage.setItem("user_name", usuario.nome);
+          localStorage.setItem("user_email", usuario.email);
+          localStorage.setItem("user_type", usuario.role);
+          if (usuario.telefone) {
+            localStorage.setItem("user_phone", usuario.telefone);
+          }
+        }
+        
         window.location.href = "/imovel-list-admin"; 
       }
     } catch (error) {

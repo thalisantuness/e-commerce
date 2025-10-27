@@ -5,13 +5,16 @@ import { IoIosArrowBack } from "react-icons/io";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { FaBox, FaTag, FaWarehouse, FaShoppingCart, FaWhatsapp } from "react-icons/fa";
+import { useProduto } from "../../context/ProdutoContext";
 import "./style.css";
 
 function ProductListDetails() {
   const { id } = useParams();
   const [produto, setProduto] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [quantidade, setQuantidade] = useState(1);
   const navigate = useNavigate();
+  const { adicionarAoCarrinho } = useProduto();
 
   useEffect(() => {
     const fetchProduto = async () => {
@@ -41,6 +44,35 @@ function ProductListDetails() {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
+  };
+
+  // Função para obter a URL da imagem do produto
+  const getImageUrl = (produto) => {
+    if (!produto) return 'https://via.placeholder.com/600x400?text=Sem+Imagem';
+    // Tenta diferentes campos possíveis para a imagem
+    return produto.foto_principal || 
+           produto.imageData || 
+           produto.image || 
+           produto.url_imagem || 
+           'https://via.placeholder.com/600x400?text=Sem+Imagem';
+  };
+
+  const handleAdicionarCarrinho = () => {
+    if (produto) {
+      for (let i = 0; i < quantidade; i++) {
+        adicionarAoCarrinho(produto);
+      }
+      // Feedback visual
+      alert(`${quantidade} ${quantidade === 1 ? 'produto adicionado' : 'produtos adicionados'} ao carrinho!`);
+    }
+  };
+
+  const handleQuantidadeChange = (tipo) => {
+    if (tipo === 'incrementar' && quantidade < produto.quantidade) {
+      setQuantidade(quantidade + 1);
+    } else if (tipo === 'decrementar' && quantidade > 1) {
+      setQuantidade(quantidade - 1);
+    }
   };
 
   if (loading) {
@@ -80,7 +112,7 @@ function ProductListDetails() {
               <div className="main-carousel">
                 <div className="slide-container">
                   <img 
-                    src={produto.foto_principal} 
+                    src={getImageUrl(produto)} 
                     alt={produto.nome}
                     className="active-slide"
                     onError={(e) => {
@@ -176,6 +208,41 @@ function ProductListDetails() {
                     </li>
                   </ul>
                 </div>
+              </div>
+
+              <div className="product-actions-section">
+                <div className="quantity-selector">
+                  <label>Quantidade:</label>
+                  <div className="quantity-controls">
+                    <button 
+                      onClick={() => handleQuantidadeChange('decrementar')}
+                      className="quantity-btn"
+                      disabled={quantidade <= 1}
+                    >
+                      -
+                    </button>
+                    <span className="quantity-display">{quantidade}</span>
+                    <button 
+                      onClick={() => handleQuantidadeChange('incrementar')}
+                      className="quantity-btn"
+                      disabled={quantidade >= produto.quantidade}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <span className="stock-info">
+                    {produto.quantidade} disponíveis
+                  </span>
+                </div>
+
+                <button 
+                  onClick={handleAdicionarCarrinho}
+                  className="add-to-cart-button"
+                  disabled={produto.quantidade === 0}
+                >
+                  <FaShoppingCart />
+                  Adicionar ao Carrinho
+                </button>
               </div>
 
               <div className="contact-section">

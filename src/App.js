@@ -6,6 +6,7 @@ import "./global.css";
 
 import Home from "./pages/home";
 import ImovelListPage from "./pages/imovel-list";
+import ProdutoListPage from "./pages/produto-list";
 import ProductListDetails from "./pages/product-details";
 import RegisterImovel from "./pages/register-imovel-admin";
 import ImovelListAdminPage from "./pages/imovel-list-admin";
@@ -13,6 +14,7 @@ import LoginAdmin from "./pages/login-admin";
 import ProtectRoute from "./components/ProtectRoute";
 import EditImovel from "./pages/edit-imovel-admin";
 import Cart from "./pages/cart";
+import MeusPedidos from "./pages/meus-pedidos";
 
 function App() {
   return (
@@ -22,9 +24,11 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/imovel-list" element={<ImovelListPage />} />
-           <Route path="/detalhes-produto/:id" element={<ProductListDetails />} />
+            <Route path="/produto-list" element={<ProdutoListPage />} />
+            <Route path="/detalhes-produto/:id" element={<ProductListDetails />} />
             <Route path="/login-admin" element={<LoginAdmin />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/meus-pedidos" element={<MeusPedidos />} />
             <Route
               path="/editar-imovel/:id"
               element={<ProtectRoute element={<EditImovel />} />}

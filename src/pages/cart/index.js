@@ -1,7 +1,9 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { FaTrash, FaPlus, FaMinus, FaShoppingBag, FaArrowLeft, FaBox, FaTag } from "react-icons/fa";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FaTrash, FaPlus, FaMinus, FaShoppingBag, FaArrowLeft, FaBox, FaTag, FaCheck } from "react-icons/fa";
 import { useProduto } from "../../context/ProdutoContext";
+import { criarPedidosCarrinho } from "../../services/pedidoService";
+import { isAuthenticated } from "../../services/authService";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import "./styles.css";
@@ -15,6 +17,23 @@ function Cart() {
     calcularTotal,
     calcularQuantidadeTotal
   } = useProduto();
+  
+  const [loading, setLoading] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showThankYouModal, setShowThankYouModal] = useState(false);
+  const [empresaId, setEmpresaId] = useState(1); // ID da empresa padrão
+  const [dataEntrega, setDataEntrega] = useState('');
+  const [observacao, setObservacao] = useState('');
+  
+  // Dados do pagamento fake
+  const [nomeCartao, setNomeCartao] = useState('');
+  const [numeroCartao, setNumeroCartao] = useState('');
+  const [validade, setValidade] = useState('');
+  const [cvv, setCvv] = useState('');
+  const [cpf, setCpf] = useState('');
+  
+  const navigate = useNavigate();
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -26,9 +45,94 @@ function Cart() {
   const handleFinalizarCompra = () => {
     if (carrinho.length === 0) return;
     
-    // Aqui você pode implementar a lógica de finalização de compra
-    alert(`Compra finalizada! Total: ${formatCurrency(calcularTotal())}`);
-    limparCarrinho();
+    // Verificar se o usuário está autenticado
+    if (!isAuthenticated()) {
+      alert('Você precisa estar logado para finalizar a compra!');
+      navigate('/login-admin');
+      return;
+    }
+    
+    // Abrir modal de checkout
+    setShowCheckoutModal(true);
+  };
+
+  const handleConfirmarCheckout = () => {
+    if (!dataEntrega) {
+      alert('Por favor, selecione uma data de entrega');
+      return;
+    }
+    
+    // Fecha modal de checkout e abre modal de pagamento
+    setShowCheckoutModal(false);
+    setShowPaymentModal(true);
+  };
+
+  const handleConfirmarPagamento = () => {
+    // Validar campos do pagamento
+    if (!nomeCartao || !numeroCartao || !validade || !cvv || !cpf) {
+      alert('Por favor, preencha todos os campos do pagamento');
+      return;
+    }
+
+    // Simular processamento
+    setLoading(true);
+    
+    setTimeout(() => {
+      setLoading(false);
+      setShowPaymentModal(false);
+      
+      // Limpar carrinho logo após o pagamento ser confirmado
+      limparCarrinho();
+      
+      setShowThankYouModal(true);
+    }, 1500);
+  };
+
+  const handleFinalizarProcesso = async () => {
+    setShowThankYouModal(false);
+    setLoading(true);
+
+    try {
+      // Converter data para ISO 8601
+      const dataISO = new Date(dataEntrega).toISOString();
+
+      const resultado = await criarPedidosCarrinho(
+        carrinho,
+        empresaId,
+        dataISO,
+        observacao
+      );
+
+      if (resultado.sucesso.length > 0) {
+        // Limpar campos do formulário
+        setNomeCartao('');
+        setNumeroCartao('');
+        setValidade('');
+        setCvv('');
+        setCpf('');
+        setDataEntrega('');
+        setObservacao('');
+        
+        navigate('/meus-pedidos');
+      } else {
+        alert('Erro ao criar pedidos. Tente novamente.');
+      }
+    } catch (error) {
+      alert('Erro ao finalizar compra: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para obter a URL da imagem do produto
+  const getImageUrl = (produto) => {
+    if (!produto) return 'https://via.placeholder.com/100x100?text=Produto';
+    // Tenta diferentes campos possíveis para a imagem
+    return produto.foto_principal || 
+           produto.imageData || 
+           produto.image || 
+           produto.url_imagem || 
+           'https://via.placeholder.com/100x100?text=Produto';
   };
 
   const getProductFeatures = (produto) => {
@@ -75,13 +179,233 @@ function Cart() {
           </span>
         </div>
 
+        {/* Modal de Checkout */}
+        {showCheckoutModal && (
+          <div className="checkout-modal-overlay">
+            <div className="checkout-modal">
+              <h2>Finalizar Pedido</h2>
+              
+              <div className="modal-form">
+                <div className="form-group">
+                  <label>Data de Entrega:</label>
+                  <input
+                    type="datetime-local"
+                    value={dataEntrega}
+                    onChange={(e) => setDataEntrega(e.target.value)}
+                    className="form-input"
+                    min={new Date().toISOString().slice(0, 16)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Empresa / Loja:</label>
+                  <select
+                    value={empresaId}
+                    onChange={(e) => setEmpresaId(Number(e.target.value))}
+                    className="form-input"
+                  >
+                    <option value={1}>Loja Principal</option>
+                    <option value={2}>Loja Secundária</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Observações (opcional):</label>
+                  <textarea
+                    value={observacao}
+                    onChange={(e) => setObservacao(e.target.value)}
+                    className="form-textarea"
+                    placeholder="Adicione observações sobre o pedido..."
+                    rows={4}
+                  />
+                </div>
+
+                <div className="modal-summary">
+                  <p><strong>Total de Itens:</strong> {calcularQuantidadeTotal()}</p>
+                  <p><strong>Valor Total:</strong> {formatCurrency(calcularTotal())}</p>
+                </div>
+
+                <div className="modal-actions">
+                  <button
+                    onClick={handleConfirmarCheckout}
+                    className="confirm-btn"
+                  >
+                    <FaCheck />
+                    Continuar para Pagamento
+                  </button>
+                  <button
+                    onClick={() => setShowCheckoutModal(false)}
+                    className="cancel-btn"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Pagamento */}
+        {showPaymentModal && (
+          <div className="checkout-modal-overlay">
+            <div className="checkout-modal payment-modal">
+              <h2>💳 Dados de Pagamento</h2>
+              
+              <div className="modal-form">
+                <div className="payment-info">
+                  <p>Complete os dados abaixo para finalizar sua compra</p>
+                  <div className="payment-total">
+                    <strong>Total a pagar:</strong> {formatCurrency(calcularTotal())}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Nome no Cartão:</label>
+                  <input
+                    type="text"
+                    value={nomeCartao}
+                    onChange={(e) => setNomeCartao(e.target.value.toUpperCase())}
+                    className="form-input"
+                    placeholder="NOME COMPLETO"
+                    maxLength={50}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Número do Cartão:</label>
+                  <input
+                    type="text"
+                    value={numeroCartao}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 16);
+                      const formatted = value.replace(/(\d{4})/g, '$1 ').trim();
+                      setNumeroCartao(formatted);
+                    }}
+                    className="form-input"
+                    placeholder="0000 0000 0000 0000"
+                    maxLength={19}
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Validade:</label>
+                    <input
+                      type="text"
+                      value={validade}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                        const formatted = value.replace(/(\d{2})(\d{0,2})/, '$1/$2');
+                        setValidade(formatted);
+                      }}
+                      className="form-input"
+                      placeholder="MM/AA"
+                      maxLength={5}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>CVV:</label>
+                    <input
+                      type="text"
+                      value={cvv}
+                      onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                      className="form-input"
+                      placeholder="123"
+                      maxLength={3}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>CPF do Titular:</label>
+                  <input
+                    type="text"
+                    value={cpf}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      const formatted = value.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+                      setCpf(formatted);
+                    }}
+                    className="form-input"
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                </div>
+
+                <div className="payment-security">
+                  <p>🔒 Pagamento 100% seguro e criptografado</p>
+                </div>
+
+                <div className="modal-actions">
+                  <button
+                    onClick={handleConfirmarPagamento}
+                    className="confirm-btn payment-btn"
+                    disabled={loading}
+                  >
+                    {loading ? 'Processando...' : (
+                      <>
+                        <FaCheck />
+                        Confirmar Pagamento
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPaymentModal(false);
+                      setShowCheckoutModal(true);
+                    }}
+                    className="cancel-btn"
+                    disabled={loading}
+                  >
+                    Voltar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Agradecimento */}
+        {showThankYouModal && (
+          <div className="checkout-modal-overlay">
+            <div className="checkout-modal thank-you-modal">
+              <div className="thank-you-content">
+                <div className="success-icon">
+                  <FaCheck />
+                </div>
+                <h2>Pagamento Processado!</h2>
+                <div className="thank-you-message">
+                  <p>
+                    <strong>GATEWAY DEVE SER ESCOLHIDO PELO CLIENTE</strong>
+                  </p>
+                  <p className="highlight">
+                    OBRIGADO POR USAR NOSSA PLATAFORMA
+                  </p>
+                </div>
+                <div className="order-info">
+                  <p>Seu pedido está sendo processado...</p>
+                  <p className="total-paid">Valor: {formatCurrency(calcularTotal())}</p>
+                </div>
+                <button
+                  onClick={handleFinalizarProcesso}
+                  className="confirm-btn finalize-btn"
+                  disabled={loading}
+                >
+                  {loading ? 'Finalizando...' : 'Ir para Meus Pedidos'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="cart-content">
           <div className="cart-items">
             {carrinho.map((item) => (
               <div key={item.produto_id} className="cart-item">
                 <div className="item-image">
                   <img 
-                    src={item.foto_principal} 
+                    src={getImageUrl(item)} 
                     alt={item.nome}
                     onError={(e) => {
                       e.target.src = 'https://via.placeholder.com/100x100?text=Produto';
