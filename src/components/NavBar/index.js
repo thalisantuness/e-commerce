@@ -10,6 +10,7 @@ export default function NavBar() {
   const [userName, setUserName] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchType, setSearchType] = useState("produtos"); // "produtos", "pedidos", "imoveis"
   const navigate = useNavigate();
   const { calcularQuantidadeTotal } = useProduto();
 
@@ -38,6 +39,35 @@ export default function NavBar() {
     navigate("/");
   };
 
+  // FUNÇÃO DE BUSCA UNIFICADA - Busca em produtos, pedidos ou imóveis
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      // Redireciona baseado no tipo de busca selecionado
+      switch(searchType) {
+        case "produtos":
+          navigate(`/produto-list?search=${encodeURIComponent(searchTerm)}`);
+          break;
+        case "pedidos":
+          if (isLoggedIn) {
+            navigate(`/meus-pedidos?search=${encodeURIComponent(searchTerm)}`);
+          } else {
+            alert("Você precisa estar logado para buscar pedidos");
+            navigate("/login-admin");
+          }
+          break;
+        case "imoveis":
+          // CÓDIGO PARA BUSCA DE IMÓVEIS (mantido para uso futuro)
+          navigate(`/imovel-list?search=${encodeURIComponent(searchTerm)}`);
+          break;
+        default:
+          navigate(`/produto-list?search=${encodeURIComponent(searchTerm)}`);
+      }
+      setSearchTerm("");
+    }
+  };
+
+  /* FUNÇÃO ORIGINAL DE BUSCA DE IMÓVEIS - MANTIDA PARA USO FUTURO
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
@@ -45,6 +75,7 @@ export default function NavBar() {
       setSearchTerm("");
     }
   };
+  */
 
   const handleLoginClick = () => {
     navigate("/login-admin");
@@ -62,7 +93,38 @@ export default function NavBar() {
           <img src={Logo} className="logo-img" alt="Logo" />
         </Link>
 
-        {/* Barra de Pesquisa */}
+        {/* Barra de Pesquisa Unificada */}
+        <div className="search-section">
+          <form onSubmit={handleSearch} className="search-form">
+            <select
+              value={searchType}
+              onChange={(e) => setSearchType(e.target.value)}
+              className="search-type-select"
+            >
+              <option value="produtos">Produtos</option>
+              <option value="pedidos">Pedidos</option>
+              {/* <option value="imoveis">Imóveis</option> */}
+            </select>
+            <input
+              type="text"
+              placeholder={
+                searchType === "produtos" 
+                  ? "Buscar produtos..." 
+                  : searchType === "pedidos" 
+                  ? "Buscar pedidos..." 
+                  : "Buscar imóveis..."
+              }
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+            <button type="submit" className="search-button">
+              <FaSearch />
+            </button>
+          </form>
+        </div>
+
+        {/* CÓDIGO ORIGINAL DA BARRA DE PESQUISA - MANTIDO PARA USO FUTURO
         <div className="search-section">
           <form onSubmit={handleSearch} className="search-form">
             <input
@@ -77,11 +139,12 @@ export default function NavBar() {
             </button>
           </form>
         </div>
+        */}
 
         {/* Menu de Navegação */}
         <nav className="nav-links">
           <Link to="/produto-list" className="nav-link">Produtos</Link>
-          <Link to="/imovel-list" className="nav-link">Imóveis</Link>
+          {/* <Link to="/imovel-list" className="nav-link">Imóveis</Link> */}
           {isLoggedIn && (
             <Link to="/meus-pedidos" className="nav-link">Meus Pedidos</Link>
           )}

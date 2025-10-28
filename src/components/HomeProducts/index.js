@@ -55,6 +55,15 @@ function HomeProducts() {
   const handleAdicionarCarrinho = (e, produto) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Debug: verificar se empresa_id está presente
+    console.log("🛒 Adicionando ao carrinho (Home):", {
+      produto_id: produto.produto_id,
+      nome: produto.nome,
+      empresa_id: produto.empresa_id,
+      tem_empresa_id: !!produto.empresa_id
+    });
+    
     adicionarAoCarrinho(produto);
     
     // Feedback visual

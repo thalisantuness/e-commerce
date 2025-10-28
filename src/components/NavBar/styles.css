@@ -53,6 +53,28 @@
   box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
 }
 
+/* Select de tipo de busca */
+.search-type-select {
+  border: none;
+  background: #e2e8f0;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #4a5568;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.3s ease;
+  border-right: 2px solid #cbd5e0;
+}
+
+.search-type-select:hover {
+  background: #cbd5e0;
+}
+
+.search-type-select:focus {
+  background: #cbd5e0;
+}
+
 .search-input {
   flex: 1;
   border: none;

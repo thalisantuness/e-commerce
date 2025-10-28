@@ -151,11 +151,27 @@
   color: #4a5568;
 }
 
+.item-category {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #3182ce;
+  font-weight: 600;
+}
+
 .item-features {
   display: flex;
   gap: 1rem;
   font-size: 0.8rem;
-  color: #718096;
+  color: #4a5568;
+}
+
+.item-features span {
+  color: #4a5568;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .item-controls {
@@ -264,7 +280,12 @@
   align-items: center;
   padding: 0.75rem 0;
   border-bottom: 1px solid #e2e8f0;
-  color: #4a5568;
+  color: #2d3748;
+  font-weight: 500;
+}
+
+.summary-line span {
+  color: #2d3748;
 }
 
 .discount {
@@ -562,6 +583,9 @@
 .payment-info p {
   margin: 0 0 0.75rem 0;
   font-size: 0.95rem;
+  color: #ffffff;
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .payment-total {
@@ -569,6 +593,8 @@
   font-weight: 700;
   padding-top: 0.5rem;
   border-top: 2px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .form-row {
@@ -665,13 +691,17 @@
   margin: 0.5rem 0;
   font-size: 1.1rem;
   line-height: 1.6;
+  color: #ffffff;
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .thank-you-message .highlight {
   font-size: 1.3rem;
   font-weight: 700;
   margin-top: 1rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .order-info {

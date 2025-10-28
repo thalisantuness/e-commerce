@@ -53,7 +53,12 @@ export default function FormLogin() {
           }
         }
         
-        window.location.href = "/imovel-list-admin"; 
+        // Redireciona para a home após login bem-sucedido
+        window.location.href = "/";
+        
+        /* CÓDIGO ORIGINAL - REDIRECIONAMENTO PARA ADMIN (mantido para uso futuro)
+        window.location.href = "/imovel-list-admin";
+        */ 
       }
     } catch (error) {
       console.error("Erro ao fazer login:", error);

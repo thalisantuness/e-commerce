@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { 
   FaBox, 
   FaClock, 
@@ -22,6 +22,7 @@ function MeusPedidos() {
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [error, setError] = useState(null);
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     fetchPedidos();
@@ -67,9 +68,42 @@ function MeusPedidos() {
            'https://via.placeholder.com/80x80?text=Produto';
   };
 
-  const pedidosFiltrados = filtroStatus === 'todos' 
-    ? pedidos 
-    : pedidos.filter(p => p.status === filtroStatus);
+  // Função para filtrar pedidos com base na busca e status
+  const pedidosFiltrados = (() => {
+    let resultado = pedidos;
+    
+    // Filtro por status
+    if (filtroStatus !== 'todos') {
+      resultado = resultado.filter(p => p.status === filtroStatus);
+    }
+    
+    // Filtro por busca
+    const searchTerm = searchParams.get('search');
+    if (searchTerm) {
+      const termoLower = searchTerm.toLowerCase();
+      resultado = resultado.filter(pedido => {
+        // Busca por ID do pedido
+        if (pedido.pedido_id?.toString().includes(termoLower)) {
+          return true;
+        }
+        // Busca por nome do produto
+        if (pedido.Produto?.nome?.toLowerCase().includes(termoLower)) {
+          return true;
+        }
+        // Busca por nome da empresa
+        if (pedido.Empresa?.nome?.toLowerCase().includes(termoLower)) {
+          return true;
+        }
+        // Busca por status
+        if (getStatusText(pedido.status)?.toLowerCase().includes(termoLower)) {
+          return true;
+        }
+        return false;
+      });
+    }
+    
+    return resultado;
+  })();
 
   if (loading) {
     return (
@@ -116,6 +150,15 @@ function MeusPedidos() {
             </Link>
             <h1>Meus Pedidos</h1>
           </div>
+
+          {/* Mensagem de resultados de busca */}
+          {searchParams.get('search') && (
+            <div className="search-results-info">
+              <p>
+                Mostrando {pedidosFiltrados.length} resultado(s) para "{searchParams.get('search')}"
+              </p>
+            </div>
+          )}
 
           {/* Filtros de Status */}
           <div className="status-filters">

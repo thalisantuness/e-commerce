@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaTrash, FaPlus, FaMinus, FaShoppingBag, FaArrowLeft, FaBox, FaTag, FaCheck } from "react-icons/fa";
 import { useProduto } from "../../context/ProdutoContext";
-import { criarPedidosCarrinho } from "../../services/pedidoService";
+import { criarPedidosCarrinho, confirmarPagamentoPedidos } from "../../services/pedidoService";
 import { isAuthenticated } from "../../services/authService";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
@@ -22,9 +22,10 @@ function Cart() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showThankYouModal, setShowThankYouModal] = useState(false);
-  const [empresaId, setEmpresaId] = useState(1); // ID da empresa padrão
+  const empresaId = 1; // ID da empresa padrão (usado apenas como fallback se o produto não tiver empresa_id)
   const [dataEntrega, setDataEntrega] = useState('');
   const [observacao, setObservacao] = useState('');
+  const [pedidosCriados, setPedidosCriados] = useState([]); // Armazena os pedidos criados
   
   // Dados do pagamento fake
   const [nomeCartao, setNomeCartao] = useState('');
@@ -56,42 +57,22 @@ function Cart() {
     setShowCheckoutModal(true);
   };
 
-  const handleConfirmarCheckout = () => {
+  const handleConfirmarCheckout = async () => {
     if (!dataEntrega) {
       alert('Por favor, selecione uma data de entrega');
       return;
     }
     
-    // Fecha modal de checkout e abre modal de pagamento
-    setShowCheckoutModal(false);
-    setShowPaymentModal(true);
-  };
-
-  const handleConfirmarPagamento = () => {
-    // Validar campos do pagamento
-    if (!nomeCartao || !numeroCartao || !validade || !cvv || !cpf) {
-      alert('Por favor, preencha todos os campos do pagamento');
-      return;
-    }
-
-    // Simular processamento
+    // Debug: verificar carrinho antes de criar pedidos
+    console.log("🛒 Carrinho ao criar pedidos:", carrinho);
+    console.log("🏢 Empresa ID padrão:", empresaId);
+    carrinho.forEach((item, index) => {
+      console.log(`  📦 Item ${index + 1}: ${item.nome} - empresa_id: ${item.empresa_id || 'NÃO TEM'}`);
+    });
+    
+    // Criar os pedidos antes de ir para o pagamento
     setLoading(true);
     
-    setTimeout(() => {
-      setLoading(false);
-      setShowPaymentModal(false);
-      
-      // Limpar carrinho logo após o pagamento ser confirmado
-      limparCarrinho();
-      
-      setShowThankYouModal(true);
-    }, 1500);
-  };
-
-  const handleFinalizarProcesso = async () => {
-    setShowThankYouModal(false);
-    setLoading(true);
-
     try {
       // Converter data para ISO 8601
       const dataISO = new Date(dataEntrega).toISOString();
@@ -104,24 +85,72 @@ function Cart() {
       );
 
       if (resultado.sucesso.length > 0) {
-        // Limpar campos do formulário
-        setNomeCartao('');
-        setNumeroCartao('');
-        setValidade('');
-        setCvv('');
-        setCpf('');
-        setDataEntrega('');
-        setObservacao('');
+        // Armazenar os pedidos criados para confirmar depois do pagamento
+        setPedidosCriados(resultado.sucesso);
         
-        navigate('/meus-pedidos');
+        // Fecha modal de checkout e abre modal de pagamento
+        setShowCheckoutModal(false);
+        setShowPaymentModal(true);
       } else {
         alert('Erro ao criar pedidos. Tente novamente.');
       }
     } catch (error) {
-      alert('Erro ao finalizar compra: ' + error.message);
+      alert('Erro ao criar pedidos: ' + error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleConfirmarPagamento = async () => {
+    // Validar campos do pagamento
+    if (!nomeCartao || !numeroCartao || !validade || !cvv || !cpf) {
+      alert('Por favor, preencha todos os campos do pagamento');
+      return;
+    }
+
+    // Processar pagamento e confirmar pedidos
+    setLoading(true);
+    
+    try {
+      // Confirmar pagamento: atualiza status para 'confirmado' e decrementa estoque
+      const resultado = await confirmarPagamentoPedidos(pedidosCriados, carrinho);
+      
+      if (resultado.sucesso.length > 0) {
+        console.log('✅ Pagamento confirmado! Pedidos atualizados e estoque decrementado.');
+        
+        // Limpar carrinho após confirmar pagamento
+        limparCarrinho();
+        
+        setShowPaymentModal(false);
+        setShowThankYouModal(true);
+      } else {
+        alert('Erro ao confirmar pagamento. Tente novamente.');
+      }
+      
+      // Mostrar erros se houver
+      if (resultado.erros.length > 0) {
+        console.warn('⚠️ Alguns pedidos tiveram problemas:', resultado.erros);
+      }
+    } catch (error) {
+      alert('Erro ao processar pagamento: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinalizarProcesso = () => {
+    // Limpar campos do formulário
+    setNomeCartao('');
+    setNumeroCartao('');
+    setValidade('');
+    setCvv('');
+    setCpf('');
+    setDataEntrega('');
+    setObservacao('');
+    setPedidosCriados([]);
+    
+    setShowThankYouModal(false);
+    navigate('/meus-pedidos');
   };
 
   // Função para obter a URL da imagem do produto
@@ -197,6 +226,8 @@ function Cart() {
                   />
                 </div>
 
+                {/* CAMPO DE EMPRESA REMOVIDO - Agora usamos a empresa_id que vem do produto */}
+                {/* 
                 <div className="form-group">
                   <label>Empresa / Loja:</label>
                   <select
@@ -208,6 +239,7 @@ function Cart() {
                     <option value={2}>Loja Secundária</option>
                   </select>
                 </div>
+                */}
 
                 <div className="form-group">
                   <label>Observações (opcional):</label>
@@ -221,6 +253,13 @@ function Cart() {
                 </div>
 
                 <div className="modal-summary">
+                  <p><strong>Resumo do Pedido:</strong></p>
+                  {carrinho.map((item, index) => (
+                    <p key={index} style={{ fontSize: '0.9rem', color: '#4a5568', marginLeft: '1rem' }}>
+                      • {item.nome} - {item.quantidade}x {formatCurrency(item.valor)}
+                    </p>
+                  ))}
+                  <hr style={{ margin: '1rem 0', border: 'none', borderTop: '1px solid #e2e8f0' }} />
                   <p><strong>Total de Itens:</strong> {calcularQuantidadeTotal()}</p>
                   <p><strong>Valor Total:</strong> {formatCurrency(calcularTotal())}</p>
                 </div>

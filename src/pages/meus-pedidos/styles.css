@@ -25,6 +25,22 @@
   margin-bottom: 1.5rem;
 }
 
+/* Mensagem de resultados de busca */
+.search-results-info {
+  background-color: #e6f3ff;
+  border-left: 4px solid #3182ce;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+}
+
+.search-results-info p {
+  margin: 0;
+  color: #2d3748;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
 .back-link {
   display: flex;
   align-items: center;
@@ -289,8 +305,17 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #4a5568;
+  color: #2d3748;
   font-size: 0.95rem;
+}
+
+.detalhe-item span {
+  color: #2d3748;
+}
+
+.detalhe-item strong {
+  color: #2d3748;
+  font-weight: 600;
 }
 
 .detalhe-item svg {

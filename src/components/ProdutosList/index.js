@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useProduto } from "../../context/ProdutoContext";
 import axios from "axios";
 import { FaShoppingCart, FaEye, FaBox, FaTag, FaWarehouse } from "react-icons/fa";
@@ -7,10 +7,12 @@ import "./styles.css";
 
 function ProdutosList() {
   const [produtos, setProdutos] = useState([]);
+  const [produtosFiltrados, setProdutosFiltrados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const { adicionarAoCarrinho } = useProduto();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -38,8 +40,9 @@ function ProdutosList() {
         
         // Debug: ver estrutura dos produtos
         if (response.data.length > 0) {
-          console.log("Estrutura do primeiro produto:", response.data[0]);
-          console.log("Campos de imagem disponíveis:", {
+          console.log("🔍 Estrutura do primeiro produto:", response.data[0]);
+          console.log("🏢 Empresa ID do produto:", response.data[0].empresa_id);
+          console.log("📸 Campos de imagem disponíveis:", {
             foto_principal: response.data[0].foto_principal,
             imageData: response.data[0].imageData,
             image: response.data[0].image,
@@ -69,9 +72,38 @@ function ProdutosList() {
     fetchProdutos();
   }, []);
 
+  // Efeito para filtrar produtos com base na busca
+  useEffect(() => {
+    const searchTerm = searchParams.get('search');
+    
+    if (searchTerm && produtos.length > 0) {
+      const termoLower = searchTerm.toLowerCase();
+      const filtrados = produtos.filter(produto => 
+        produto.nome.toLowerCase().includes(termoLower) ||
+        produto.tipo_produto?.toLowerCase().includes(termoLower) ||
+        produto.tipo_comercializacao?.toLowerCase().includes(termoLower)
+      );
+      
+      setProdutosFiltrados(filtrados);
+      setNotFound(filtrados.length === 0);
+    } else {
+      setProdutosFiltrados(produtos);
+      setNotFound(produtos.length === 0);
+    }
+  }, [searchParams, produtos]);
+
   const handleAdicionarCarrinho = (e, produto) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Debug: verificar se empresa_id está presente
+    console.log("🛒 Adicionando ao carrinho:", {
+      produto_id: produto.produto_id,
+      nome: produto.nome,
+      empresa_id: produto.empresa_id,
+      tem_empresa_id: !!produto.empresa_id
+    });
+    
     adicionarAoCarrinho(produto);
     
     // Feedback visual
@@ -118,11 +150,17 @@ function ProdutosList() {
   }
 
   if (notFound) {
+    const searchTerm = searchParams.get('search');
     return (
       <div className="produtos-list-container">
         <div className="not-found-message">
           <h3>Nenhum produto encontrado</h3>
-          <p>Não há produtos disponíveis no momento</p>
+          <p>
+            {searchTerm 
+              ? `Não foram encontrados produtos com o termo "${searchTerm}"`
+              : "Não há produtos disponíveis no momento"
+            }
+          </p>
         </div>
       </div>
     );
@@ -130,8 +168,15 @@ function ProdutosList() {
 
   return (
     <div className="produtos-list-container">
+      {searchParams.get('search') && (
+        <div className="search-results-info">
+          <p>
+            Mostrando {produtosFiltrados.length} resultado(s) para "{searchParams.get('search')}"
+          </p>
+        </div>
+      )}
       <div className="produtos-grid">
-        {produtos.map((produto) => (
+        {produtosFiltrados.map((produto) => (
           <div
             key={produto.produto_id}
             className="produto-card"

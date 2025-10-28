@@ -121,20 +121,95 @@ export async function buscarPedido(pedidoId) {
 }
 
 /**
+ * Atualiza o status de um pedido
+ * @param {number} pedidoId - ID do pedido
+ * @param {string} novoStatus - Novo status do pedido (ex: 'confirmado', 'em_transporte', 'entregue')
+ * @returns {Promise<Object>}
+ */
+export async function atualizarStatusPedido(pedidoId, novoStatus) {
+  try {
+    const token = getAuthToken();
+    
+    if (!token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/pedidos/${pedidoId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ status: novoStatus })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao atualizar status do pedido');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao atualizar status do pedido:', error);
+    throw error;
+  }
+}
+
+/**
+ * Decrementa o estoque de um produto
+ * @param {number} produtoId - ID do produto
+ * @param {number} quantidade - Quantidade a ser decrementada
+ * @returns {Promise<Object>}
+ */
+export async function decrementarEstoque(produtoId, quantidade) {
+  try {
+    const token = getAuthToken();
+    
+    if (!token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/produtos/${produtoId}/estoque`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ quantidade_decrementar: quantidade })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao decrementar estoque');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao decrementar estoque:', error);
+    throw error;
+  }
+}
+
+/**
  * Cria pedidos para todos os itens do carrinho
  * @param {Array} carrinho - Array de itens do carrinho
- * @param {number} empresaId - ID da empresa
+ * @param {number} empresaIdPadrao - ID da empresa padrão (usado se o produto não tiver empresa_id)
  * @param {string} dataHoraEntrega - Data e hora de entrega (ISO 8601)
  * @param {string} observacao - Observações do pedido (opcional)
  * @returns {Promise<Array>}
  */
-export async function criarPedidosCarrinho(carrinho, empresaId, dataHoraEntrega, observacao = '') {
+export async function criarPedidosCarrinho(carrinho, empresaIdPadrao, dataHoraEntrega, observacao = '') {
   try {
     const pedidosCriados = [];
     const erros = [];
 
     for (const item of carrinho) {
       try {
+        // Usar a empresa_id do produto se existir, caso contrário usa a empresa padrão
+        const empresaId = item.empresa_id || empresaIdPadrao;
+        
         const pedidoData = {
           produto_id: item.produto_id,
           empresa_id: empresaId,
@@ -143,9 +218,12 @@ export async function criarPedidosCarrinho(carrinho, empresaId, dataHoraEntrega,
           observacao: observacao
         };
 
+        console.log(`📦 Criando pedido para produto ${item.produto_id} com empresa ${empresaId}`);
+        
         const pedido = await criarPedido(pedidoData);
         pedidosCriados.push(pedido);
       } catch (error) {
+        console.error(`❌ Erro ao criar pedido para ${item.nome}:`, error);
         erros.push({
           produto: item.nome,
           erro: error.message
@@ -159,6 +237,50 @@ export async function criarPedidosCarrinho(carrinho, empresaId, dataHoraEntrega,
     };
   } catch (error) {
     console.error('Erro ao criar pedidos do carrinho:', error);
+    throw error;
+  }
+}
+
+/**
+ * Confirma o pagamento e finaliza os pedidos
+ * (Atualiza status para 'confirmado' e decrementa estoque)
+ * @param {Array} pedidos - Array de pedidos criados
+ * @param {Array} carrinho - Array de itens do carrinho para decrementar estoque
+ * @returns {Promise<Object>}
+ */
+export async function confirmarPagamentoPedidos(pedidos, carrinho) {
+  try {
+    const pedidosConfirmados = [];
+    const erros = [];
+
+    for (let i = 0; i < pedidos.length; i++) {
+      const pedido = pedidos[i];
+      const item = carrinho[i];
+
+      try {
+        // 1. Atualizar status do pedido para 'confirmado'
+        await atualizarStatusPedido(pedido.pedido_id, 'confirmado');
+        
+        // 2. Decrementar estoque do produto
+        await decrementarEstoque(item.produto_id, item.quantidade);
+        
+        pedidosConfirmados.push(pedido);
+      } catch (error) {
+        console.error(`Erro ao confirmar pedido ${pedido.pedido_id}:`, error);
+        erros.push({
+          pedido_id: pedido.pedido_id,
+          produto: item.nome,
+          erro: error.message
+        });
+      }
+    }
+
+    return {
+      sucesso: pedidosConfirmados,
+      erros: erros
+    };
+  } catch (error) {
+    console.error('Erro ao confirmar pagamento dos pedidos:', error);
     throw error;
   }
 }
