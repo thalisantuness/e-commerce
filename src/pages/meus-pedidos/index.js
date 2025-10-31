@@ -37,7 +37,22 @@ function MeusPedidos() {
       }
 
       const pedidosData = await listarPedidosCliente();
-      setPedidos(pedidosData);
+      
+      // FILTRAR pedidos com produtos removidos
+      const pedidosValidos = pedidosData.filter(pedido => {
+        // Verificar se o produto existe e não foi removido
+        const produto = pedido.Produto;
+        if (!produto) return false;
+        
+        // Se o nome do produto é "Produto removido", filtrar este pedido
+        if (produto.nome === "Produto removido" || produto.nome === null) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      setPedidos(pedidosValidos);
       setLoading(false);
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error);
@@ -58,17 +73,28 @@ function MeusPedidos() {
   };
 
   // Função para obter a URL da imagem do produto
+  // Usa data URI para placeholder ao invés de fazer requisições externas
   const getImageUrl = (produto) => {
-    if (!produto) return 'https://via.placeholder.com/80x80?text=Produto';
-    // Tenta diferentes campos possíveis para a imagem
-    return produto.foto_principal || 
-           produto.imageData || 
-           produto.image || 
-           produto.url_imagem || 
-           'https://via.placeholder.com/80x80?text=Produto';
+    if (!produto) {
+      // Data URI para placeholder - não faz requisição HTTP
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik00MCAyNEM0Ni42IDI0IDUyIDI5LjQgNTIgMzZDNTIgNDIuNiA0Ni42IDQ4IDQwIDQ4QzMzLjQgNDggMjggNDIuNiAyOCAzNkMyOCAyOS40IDMzLjQgMjQgNDAgMjRaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik0yMCA1MkMyMCA0OS43OTAyIDIyLjc5MDIgNDggMjYgNDhINTJDNTUuMjA5OCA0OCA1OCA0OS43OTAyIDU4IDUyVjY4QzU4IDcwLjIwOTggNTUuMjA5OCA3MiA1MiA3MkgyNkMyMi43OTAyIDcyIDIwIDcwLjIwOTggMjAgNjhWNTJaIiBmaWxsPSIjQ0JENUUwIi8+Cjwvc3ZnPgo=';
+    }
+    
+    const imageUrl = produto.foto_principal || 
+                     produto.imageData || 
+                     produto.image || 
+                     produto.url_imagem;
+    
+    // Se não tiver imagem, usar data URI ao invés de fazer requisição externa
+    if (!imageUrl) {
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik00MCAyNEM0Ni42IDI0IDUyIDI5LjQgNTIgMzZDNTIgNDIuNiA0Ni42IDQ4IDQwIDQ4QzMzLjQgNDggMjggNDIuNiAyOCAzNkMyOCAyOS40IDMzLjQgMjQgNDAgMjRaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik0yMCA1MkMyMCA0OS43OTAyIDIyLjc5MDIgNDggMjYgNDhINTJDNTUuMjA5OCA0OCA1OCA0OS43OTAyIDU4IDUyVjY4QzU4IDcwLjIwOTggNTUuMjA5OCA3MiA1MiA3MkgyNkMyMi43OTAyIDcyIDIwIDcwLjIwOTggMjAgNjhWNTJaIiBmaWxsPSIjQ0JENUUwIi8+Cjwvc3ZnPgo=';
+    }
+    
+    return imageUrl;
   };
 
   // Função para filtrar pedidos com base na busca e status
+  // NOTA: pedidos com produtos removidos já foram filtrados em fetchPedidos
   const pedidosFiltrados = (() => {
     let resultado = pedidos;
     
@@ -86,7 +112,7 @@ function MeusPedidos() {
         if (pedido.pedido_id?.toString().includes(termoLower)) {
           return true;
         }
-        // Busca por nome do produto
+        // Busca por nome do produto (sempre existe pois removemos os com "Produto removido")
         if (pedido.Produto?.nome?.toLowerCase().includes(termoLower)) {
           return true;
         }
@@ -237,20 +263,26 @@ function MeusPedidos() {
                   <div className="produto-info">
                     <img 
                       src={getImageUrl(pedido.Produto)} 
-                      alt={pedido.Produto.nome}
+                      alt={pedido.Produto?.nome || 'Produto'}
                       className="produto-image"
+                      loading="lazy"
                       onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/80x80?text=Produto';
+                        // Prevenir loop infinito de requisições
+                        if (e.target.dataset.errorHandled === 'true') return;
+                        e.target.dataset.errorHandled = 'true';
+                        
+                        // Usar data URI ao invés de fazer nova requisição HTTP
+                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik00MCAyNEM0Ni42IDI0IDUyIDI5LjQgNTIgMzZDNTIgNDIuNiA0Ni42IDQ4IDQwIDQ4QzMzLjQgNDggMjggNDIuNiAyOCAzNkMyOCAyOS40IDMzLjQgMjQgNDAgMjRaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik0yMCA1MkMyMCA0OS43OTAyIDIyLjc5MDIgNDggMjYgNDhINTJDNTUuMjA5OCA0OCA1OCA0OS43OTAyIDU4IDUyVjY4QzU4IDcwLjIwOTggNTUuMjA5OCA3MiA1MiA3MkgyNkMyMi43OTAyIDcyIDIwIDcwLjIwOTggMjAgNjhWNTJaIiBmaWxsPSIjQ0JENUUwIi8+Cjwvc3ZnPgo=';
                       }}
                     />
                     <div className="produto-details">
-                      <h3>{pedido.Produto.nome}</h3>
+                      <h3>{pedido.Produto?.nome || 'Produto'}</h3>
                       <p className="produto-quantidade">
                         Quantidade: {pedido.quantidade} un
                       </p>
                       <p className="produto-valor">
-                        {formatCurrency(pedido.Produto.valor)} x {pedido.quantidade} = 
-                        <strong> {formatCurrency(pedido.Produto.valor * pedido.quantidade)}</strong>
+                        {formatCurrency(pedido.Produto?.valor || 0)} x {pedido.quantidade} = 
+                        <strong> {formatCurrency((pedido.Produto?.valor || 0) * pedido.quantidade)}</strong>
                       </p>
                     </div>
                   </div>
@@ -259,7 +291,7 @@ function MeusPedidos() {
                     <div className="detalhe-item">
                       <FaStore />
                       <span>
-                        <strong>Loja:</strong> {pedido.Empresa.nome}
+                        <strong>Loja:</strong> {pedido.Empresa?.nome || 'N/A'}
                       </span>
                     </div>
                     <div className="detalhe-item">

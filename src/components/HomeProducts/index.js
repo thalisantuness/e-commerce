@@ -43,13 +43,45 @@ function HomeProducts() {
   };
 
   // Função para obter a URL da imagem do produto
+  // Prioriza links S3 sobre base64 (que é muito pesado para listagens)
   const getImageUrl = (produto) => {
-    // Tenta diferentes campos possíveis para a imagem
-    return produto.foto_principal || 
-           produto.imageData || 
-           produto.image || 
-           produto.url_imagem || 
-           'https://via.placeholder.com/300x200?text=Sem+Imagem';
+    if (!produto) {
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik0xNTAgNzBDMTYzLjYgNzAgMTc1IDgxLjQgMTc1IDk1QzE3NSAxMDguNiAxNjMuNiAxMjAgMTUwIDEyMEMxMzYuNCAxMjAgMTI1IDEwOC42IDEyNSA5NUMxMjUgODEuNCAxMzYuNCA3MCAxNTAgNzBaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik03NSAxNTBDNzUgMTQ3Ljc5MSA3Ny43OTAyIDE0NSA4MSAxNDVIMTE5QzEyMi4yMDk4IDE0NSAxMjUgMTQ3Ljc5MSAxMjUgMTUwVjE3MEMxMjUgMTcyLjIwOTggMTIyLjIwOTggMTc1IDExOSAxNzVIODFDNzcuNzkwMiAxNzUgNzUgMTcyLjIwOTggNzUgMTcwVjE1MFoiIGZpbGw9IiNDQkQ1RTAiLz4KPC9zdmc+';
+    }
+    
+    // Coletar todas as possíveis URLs
+    const imageFields = [
+      produto.foto_principal,
+      produto.url_imagem,
+      produto.image,
+      produto.imageData
+    ].filter(Boolean); // Remove valores falsy
+    
+    // Priorizar links HTTP/HTTPS (S3) sobre base64
+    const s3Links = imageFields.filter(url => 
+      typeof url === 'string' && 
+      (url.startsWith('http://') || url.startsWith('https://'))
+    );
+    
+    // Se houver links S3, usar o primeiro
+    if (s3Links.length > 0) {
+      return s3Links[0];
+    }
+    
+    // Se não houver links S3 mas houver base64, usar placeholder (base64 é muito pesado)
+    const base64Images = imageFields.filter(url => 
+      typeof url === 'string' && 
+      url.startsWith('data:image')
+    );
+    
+    if (base64Images.length > 0) {
+      // Base64 é muito pesado para listagens - usar placeholder
+      console.warn('⚠️ Produto', produto.nome, 'retornou base64 ao invés de link S3. Usando placeholder.');
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik0xNTAgNzBDMTYzLjYgNzAgMTc1IDgxLjQgMTc1IDk1QzE3NSAxMDguNiAxNjMuNiAxMjAgMTUwIDEyMEMxMzYuNCAxMjAgMTI1IDEwOC42IDEyNSA5NUMxMjUgODEuNCAxMzYuNCA3MCAxNTAgNzBaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik03NSAxNTBDNzUgMTQ3Ljc5MSA3Ny43OTAyIDE0NSA4MSAxNDVIMTE5QzEyMi4yMDk4IDE0NSAxMjUgMTQ3Ljc5MSAxMjUgMTUwVjE3MEMxMjUgMTcyLjIwOTggMTIyLjIwOTggMTc1IDExOSAxNzVIODFDNzcuNzkwMiAxNzUgNzUgMTcyLjIwOTggNzUgMTcwVjE1MFoiIGZpbGw9IiNDQkQ1RTAiLz4KPC9zdmc+';
+    }
+    
+    // Nenhuma imagem encontrada
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik0xNTAgNzBDMTYzLjYgNzAgMTc1IDgxLjQgMTc1IDk1QzE3NSAxMDguNiAxNjMuNiAxMjAgMTUwIDEyMEMxMzYuNCAxMjAgMTI1IDEwOC42IDEyNSA5NUMxMjUgODEuNCAxMzYuNCA3MCAxNTAgNzBaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik03NSAxNTBDNzUgMTQ3Ljc5MSA3Ny43OTAyIDE0NSA4MSAxNDVIMTE5QzEyMi4yMDk4IDE0NSAxMjUgMTQ3Ljc5MSAxMjUgMTUwVjE3MEMxMjUgMTcyLjIwOTggMTIyLjIwOTggMTc1IDExOSAxNzVIODFDNzcuNzkwMiAxNzUgNzUgMTcyLjIwOTggNzUgMTcwVjE1MFoiIGZpbGw9IiNDQkQ1RTAiLz4KPC9zdmc+';
   };
 
   const handleAdicionarCarrinho = (e, produto) => {

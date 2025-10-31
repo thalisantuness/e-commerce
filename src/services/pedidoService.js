@@ -196,11 +196,11 @@ export async function decrementarEstoque(produtoId, quantidade) {
  * Cria pedidos para todos os itens do carrinho
  * @param {Array} carrinho - Array de itens do carrinho
  * @param {number} empresaIdPadrao - ID da empresa padrão (usado se o produto não tiver empresa_id)
- * @param {string} dataHoraEntrega - Data e hora de entrega (ISO 8601)
+ * @param {string|null} dataHoraEntrega - Data e hora de entrega (ISO 8601) - Opcional, pode ser null
  * @param {string} observacao - Observações do pedido (opcional)
  * @returns {Promise<Array>}
  */
-export async function criarPedidosCarrinho(carrinho, empresaIdPadrao, dataHoraEntrega, observacao = '') {
+export async function criarPedidosCarrinho(carrinho, empresaIdPadrao, dataHoraEntrega = null, observacao = '') {
   try {
     const pedidosCriados = [];
     const erros = [];
@@ -214,7 +214,7 @@ export async function criarPedidosCarrinho(carrinho, empresaIdPadrao, dataHoraEn
           produto_id: item.produto_id,
           empresa_id: empresaId,
           quantidade: item.quantidade,
-          data_hora_entrega: dataHoraEntrega,
+          ...(dataHoraEntrega ? { data_hora_entrega: dataHoraEntrega } : { data_hora_entrega: null }), // NULL permitido pelo banco
           observacao: observacao
         };
 

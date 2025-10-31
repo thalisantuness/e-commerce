@@ -51,6 +51,24 @@ export default function FormLogin() {
           if (usuario.telefone) {
             localStorage.setItem("user_phone", usuario.telefone);
           }
+          
+          // Salvar foto do perfil do usuário - prioridade para foto_perfil
+          const foto = usuario.foto_perfil || 
+                       usuario.foto_principal || 
+                       usuario.imageData || 
+                       usuario.image || 
+                       usuario.url_imagem || 
+                       usuario.avatar || 
+                       usuario.photo || 
+                       "";
+          
+          if (foto) {
+            localStorage.setItem("user_photo", foto);
+            console.log("📸 Foto de perfil salva:", foto);
+          } else {
+            localStorage.removeItem("user_photo");
+            console.log("⚠️ Usuário não possui foto de perfil");
+          }
         }
         
         // Redireciona para a home após login bem-sucedido
@@ -84,7 +102,7 @@ export default function FormLogin() {
     <div className="login-container">
       <ToastContainer />
       <div className="login-card">
-        <h2 className="login-title">Acesso Administrativo</h2>
+        <h2 className="login-title">Acesso Cliente</h2>
         <p className="login-subtitle">Insira suas credenciais para acessar o painel</p>
         
         <form className="login-form" onSubmit={handleSubmit}>

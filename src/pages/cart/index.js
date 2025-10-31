@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaTrash, FaPlus, FaMinus, FaShoppingBag, FaArrowLeft, FaBox, FaTag, FaCheck } from "react-icons/fa";
 import { useProduto } from "../../context/ProdutoContext";
-import { criarPedidosCarrinho, confirmarPagamentoPedidos } from "../../services/pedidoService";
+import { criarPedidosCarrinho } from "../../services/pedidoService";
 import { isAuthenticated } from "../../services/authService";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
@@ -22,8 +22,8 @@ function Cart() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showThankYouModal, setShowThankYouModal] = useState(false);
+  const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
   const empresaId = 1; // ID da empresa padrão (usado apenas como fallback se o produto não tiver empresa_id)
-  const [dataEntrega, setDataEntrega] = useState('');
   const [observacao, setObservacao] = useState('');
   const [pedidosCriados, setPedidosCriados] = useState([]); // Armazena os pedidos criados
   
@@ -48,8 +48,7 @@ function Cart() {
     
     // Verificar se o usuário está autenticado
     if (!isAuthenticated()) {
-      alert('Você precisa estar logado para finalizar a compra!');
-      navigate('/login-admin');
+      setShowLoginRequiredModal(true);
       return;
     }
     
@@ -58,11 +57,6 @@ function Cart() {
   };
 
   const handleConfirmarCheckout = async () => {
-    if (!dataEntrega) {
-      alert('Por favor, selecione uma data de entrega');
-      return;
-    }
-    
     // Debug: verificar carrinho antes de criar pedidos
     console.log("🛒 Carrinho ao criar pedidos:", carrinho);
     console.log("🏢 Empresa ID padrão:", empresaId);
@@ -74,13 +68,10 @@ function Cart() {
     setLoading(true);
     
     try {
-      // Converter data para ISO 8601
-      const dataISO = new Date(dataEntrega).toISOString();
-
       const resultado = await criarPedidosCarrinho(
         carrinho,
         empresaId,
-        dataISO,
+        null, // dataHoraEntrega removido - não faz sentido cliente definir
         observacao
       );
 
@@ -108,30 +99,22 @@ function Cart() {
       return;
     }
 
-    // Processar pagamento e confirmar pedidos
+    // Processar pagamento FAKE (não chama API real)
     setLoading(true);
     
     try {
-      // Confirmar pagamento: atualiza status para 'confirmado' e decrementa estoque
-      const resultado = await confirmarPagamentoPedidos(pedidosCriados, carrinho);
+      // Simular delay de processamento
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      if (resultado.sucesso.length > 0) {
-        console.log('✅ Pagamento confirmado! Pedidos atualizados e estoque decrementado.');
-        
-        // Limpar carrinho após confirmar pagamento
-        limparCarrinho();
-        
-        setShowPaymentModal(false);
-        setShowThankYouModal(true);
-      } else {
-        alert('Erro ao confirmar pagamento. Tente novamente.');
-      }
+      console.log('✅ Pagamento processado (fake). Pedidos já foram criados anteriormente.');
       
-      // Mostrar erros se houver
-      if (resultado.erros.length > 0) {
-        console.warn('⚠️ Alguns pedidos tiveram problemas:', resultado.erros);
-      }
+      // Limpar carrinho após confirmar pagamento
+      limparCarrinho();
+      
+      setShowPaymentModal(false);
+      setShowThankYouModal(true);
     } catch (error) {
+      console.error('Erro ao processar pagamento:', error);
       alert('Erro ao processar pagamento: ' + error.message);
     } finally {
       setLoading(false);
@@ -145,7 +128,6 @@ function Cart() {
     setValidade('');
     setCvv('');
     setCpf('');
-    setDataEntrega('');
     setObservacao('');
     setPedidosCriados([]);
     
@@ -154,14 +136,44 @@ function Cart() {
   };
 
   // Função para obter a URL da imagem do produto
+  // Prioriza links S3 sobre base64 (que é muito pesado)
   const getImageUrl = (produto) => {
-    if (!produto) return 'https://via.placeholder.com/100x100?text=Produto';
-    // Tenta diferentes campos possíveis para a imagem
-    return produto.foto_principal || 
-           produto.imageData || 
-           produto.image || 
-           produto.url_imagem || 
-           'https://via.placeholder.com/100x100?text=Produto';
+    if (!produto) {
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik01MCAzNUM1Ny4yIDM1IDYzIDQwLjggNjMgNDhDNjMgNTUuMiA1Ny4yIDYxIDUwIDYxQzQyLjggNjEgMzcgNTUuMiAzNyA0OEMzNyA0MC44IDQyLjggMzUgNTAgMzVaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik0yNSA3NUMyNSA3My43OTAyIDI3Ljc5MDIgNzIgMzEgNzJINjlDNzIuMjA5OCA3MiA3NSA3My43OTAyIDc1IDc1Vjg1Qzc1IDg3LjIwOTggNzIuMjA5OCA4OSA2OSA4OUgzM0MyOS43OTAyIDg5IDI3IDg3LjIwOTggMjcgODVWNzVaIiBmaWxsPSIjQ0JENUUwIi8+Cjwvc3ZnPg==';
+    }
+    
+    // Coletar todas as possíveis URLs
+    const imageFields = [
+      produto.foto_principal,
+      produto.url_imagem,
+      produto.image,
+      produto.imageData
+    ].filter(Boolean); // Remove valores falsy
+    
+    // Priorizar links HTTP/HTTPS (S3) sobre base64
+    const s3Links = imageFields.filter(url => 
+      typeof url === 'string' && 
+      (url.startsWith('http://') || url.startsWith('https://'))
+    );
+    
+    // Se houver links S3, usar o primeiro
+    if (s3Links.length > 0) {
+      return s3Links[0];
+    }
+    
+    // Se não houver links S3 mas houver base64, usar placeholder (base64 é muito pesado)
+    const base64Images = imageFields.filter(url => 
+      typeof url === 'string' && 
+      url.startsWith('data:image')
+    );
+    
+    if (base64Images.length > 0) {
+      // Base64 é muito pesado - usar placeholder
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik01MCAzNUM1Ny4yIDM1IDYzIDQwLjggNjMgNDhDNjMgNTUuMiA1Ny4yIDYxIDUwIDYxQzQyLjggNjEgMzcgNTUuMiAzNyA0OEMzNyA0MC44IDQyLjggMzUgNTAgMzVaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik0yNSA3NUMyNSA3My43OTAyIDI3Ljc5MDIgNzIgMzEgNzJINjlDNzIuMjA5OCA3MiA3NSA3My43OTAyIDc1IDc1Vjg1Qzc1IDg3LjIwOTggNzIuMjA5OCA4OSA2OSA4OUgzM0MyOS43OTAyIDg5IDI3IDg3LjIwOTggMjcgODVWNzVaIiBmaWxsPSIjQ0JENUUwIi8+Cjwvc3ZnPg==';
+    }
+    
+    // Nenhuma imagem encontrada
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik01MCAzNUM1Ny4yIDM1IDYzIDQwLjggNjMgNDhDNjMgNTUuMiA1Ny4yIDYxIDUwIDYxQzQyLjggNjEgMzcgNTUuMiAzNyA0OEMzNyA0MC44IDQyLjggMzUgNTAgMzVaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik0yNSA3NUMyNSA3My43OTAyIDI3Ljc5MDIgNzIgMzEgNzJINjlDNzIuMjA5OCA3MiA3NSA3My43OTAyIDc1IDc1Vjg1Qzc1IDg3LjIwOTggNzIuMjA5OCA4OSA2OSA4OUgzM0MyOS43OTAyIDg5IDI3IDg3LjIwOTggMjcgODVWNzVaIiBmaWxsPSIjQ0JENUUwIi8+Cjwvc3ZnPg==';
   };
 
   const getProductFeatures = (produto) => {
@@ -208,6 +220,34 @@ function Cart() {
           </span>
         </div>
 
+        {/* Modal: Login Obrigatório */}
+        {showLoginRequiredModal && (
+          <div className="checkout-modal-overlay">
+            <div className="checkout-modal">
+              <h2>Faça login para continuar</h2>
+              <div className="modal-form">
+                <p style={{ color: '#4a5568', margin: 0 }}>
+                  Você precisa estar logado para finalizar a compra.
+                </p>
+                <div className="modal-actions">
+                  <button
+                    onClick={() => navigate('/login-admin')}
+                    className="confirm-btn"
+                  >
+                    Entrar
+                  </button>
+                  <button
+                    onClick={() => setShowLoginRequiredModal(false)}
+                    className="cancel-btn"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Modal de Checkout */}
         {showCheckoutModal && (
           <div className="checkout-modal-overlay">
@@ -215,17 +255,8 @@ function Cart() {
               <h2>Finalizar Pedido</h2>
               
               <div className="modal-form">
-                <div className="form-group">
-                  <label>Data de Entrega:</label>
-                  <input
-                    type="datetime-local"
-                    value={dataEntrega}
-                    onChange={(e) => setDataEntrega(e.target.value)}
-                    className="form-input"
-                    min={new Date().toISOString().slice(0, 16)}
-                  />
-                </div>
-
+                {/* CAMPO DATA DE ENTREGA REMOVIDO - Não faz sentido cliente definir data de entrega */}
+                
                 {/* CAMPO DE EMPRESA REMOVIDO - Agora usamos a empresa_id que vem do produto */}
                 {/* 
                 <div className="form-group">
@@ -446,8 +477,12 @@ function Cart() {
                   <img 
                     src={getImageUrl(item)} 
                     alt={item.nome}
+                    loading="lazy"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=Produto';
+                      // Prevenir loop infinito de requisições
+                      if (e.target.dataset.errorHandled) return;
+                      e.target.dataset.errorHandled = 'true';
+                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik01MCAzNUM1Ny4yIDM1IDYzIDQwLjggNjMgNDhDNjMgNTUuMiA1Ny4yIDYxIDUwIDYxQzQyLjggNjEgMzcgNTUuMiAzNyA0OEMzNyA0MC44IDQyLjggMzUgNTAgMzVaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik0yNSA3NUMyNSA3My43OTAyIDI3Ljc5MDIgNzIgMzEgNzJINjlDNzIuMjA5OCA3MiA3NSA3My43OTAyIDc1IDc1Vjg1Qzc1IDg3LjIwOTggNzIuMjA5OCA4OSA2OSA4OUgzM0MyOS43OTAyIDg5IDI3IDg3LjIwOTggMjcgODVWNzVaIiBmaWxsPSIjQ0JENUUwIi8+Cjwvc3ZnPg==';
                     }}
                   />
                 </div>

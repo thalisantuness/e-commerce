@@ -15,6 +15,7 @@ import ProtectRoute from "./components/ProtectRoute";
 import EditImovel from "./pages/edit-imovel-admin";
 import Cart from "./pages/cart";
 import MeusPedidos from "./pages/meus-pedidos";
+import Perfil from "./pages/perfil";
 
 function App() {
   return (
@@ -29,6 +30,10 @@ function App() {
             <Route path="/login-admin" element={<LoginAdmin />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/meus-pedidos" element={<MeusPedidos />} />
+            <Route
+              path="/perfil"
+              element={<ProtectRoute element={<Perfil />} />}
+            />
             <Route
               path="/editar-imovel/:id"
               element={<ProtectRoute element={<EditImovel />} />}

@@ -13,17 +13,199 @@ function ProductListDetails() {
   const [produto, setProduto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantidade, setQuantidade] = useState(1);
+  const [fotoAtual, setFotoAtual] = useState(null);
+  const [fotosSecundarias, setFotosSecundarias] = useState([]);
+  const [empresa, setEmpresa] = useState(null);
   const navigate = useNavigate();
   const { adicionarAoCarrinho } = useProduto();
 
+  // Data URI para placeholder - não faz requisição HTTP
+  const getPlaceholderImage = () => {
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik0zMDAgMTgwQzMyNy42IDE4MCAzNTAgMjAyLjQgMzUwIDIzMEMzNTAgMjU3LjYgMzI3LjYgMjgwIDMwMCAyODBDMjcyLjQgMjgwIDI1MCAyNTcuNiAyNTAgMjMwQzI1MCAyMDIuNCAyNzIuNCAxODAgMzAwIDE4MFoiIGZpbGw9IiNDQkQ1RTAiLz4KPHA+dGggIGQ9Ik0yMDAgMzIwQzIwMCAzMTcuNzkxIDIwMi43OTEgMzE2IDIwNiAzMTZINDRDNDc3LjIwOTggMzE2IDUwMCAzMTcuNzkxIDUwMCAzMjBWNDAwQzUwMCA0MDIuMjA5OCA0NzcuMjA5OCA0MDQgNDQ0IDQwNEgyMDZDMjAyLjc5MDIgNDA0IDIwMCA0MDIuMjA5OCAyMDAgNDAwVjMyMFoiIGZpbGw9IiNDQkQ1RTAiLz4KPC9zdmc+';
+  };
+
+  // Função para obter a URL da imagem do produto
+  // Prioriza links S3 sobre base64
+  const getImageUrl = (produto) => {
+    if (!produto) return getPlaceholderImage();
+    
+    // Coletar todas as possíveis URLs
+    const imageFields = [
+      produto.foto_principal,
+      produto.url_imagem,
+      produto.image,
+      produto.imageData
+    ].filter(Boolean); // Remove valores falsy
+    
+    // Priorizar links HTTP/HTTPS (S3) sobre base64
+    const s3Links = imageFields.filter(url => 
+      typeof url === 'string' && 
+      (url.startsWith('http://') || url.startsWith('https://'))
+    );
+    
+    // Se houver links S3, usar o primeiro
+    if (s3Links.length > 0) {
+      return s3Links[0];
+    }
+    
+    // Se não houver links S3 mas houver base64, usar base64 (aceita em detalhes)
+    const base64Images = imageFields.filter(url => 
+      typeof url === 'string' && 
+      url.startsWith('data:image')
+    );
+    
+    if (base64Images.length > 0) {
+      // Em detalhes, aceita base64 (mas prefere S3)
+      console.warn('⚠️ Produto', produto.nome, 'retornou base64. Backend deveria retornar link S3.');
+      return base64Images[0];
+    }
+    
+    // Nenhuma imagem encontrada
+    return getPlaceholderImage();
+  };
+
   useEffect(() => {
+    // Função auxiliar dentro do useEffect para evitar warning de dependência
+    const getImageUrlForFetch = (produto) => {
+      if (!produto) return getPlaceholderImage();
+      
+      // Coletar todas as possíveis URLs
+      const imageFields = [
+        produto.foto_principal,
+        produto.url_imagem,
+        produto.image,
+        produto.imageData
+      ].filter(Boolean);
+      
+      // Priorizar links HTTP/HTTPS (S3) sobre base64
+      const s3Links = imageFields.filter(url => 
+        typeof url === 'string' && 
+        (url.startsWith('http://') || url.startsWith('https://'))
+      );
+      
+      if (s3Links.length > 0) {
+        return s3Links[0];
+      }
+      
+      const base64Images = imageFields.filter(url => 
+        typeof url === 'string' && 
+        url.startsWith('data:image')
+      );
+      
+      if (base64Images.length > 0) {
+        return base64Images[0];
+      }
+      
+      return getPlaceholderImage();
+    };
+
     const fetchProduto = async () => {
       try {
         if (id) {
           const response = await axios.get(
             `https://back-pdv-production.up.railway.app/produtos/${id}`
           );
-          setProduto(response.data);
+          const produtoData = response.data;
+          setProduto(produtoData);
+          
+          // Configurar foto principal (só se não for placeholder)
+          const fotoPrincipal = getImageUrlForFetch(produtoData);
+          // Se a foto principal for um placeholder, não definir como atual (deixar null para usar fallback)
+          if (fotoPrincipal && !fotoPrincipal.includes('placeholder.com') && !fotoPrincipal.startsWith('data:')) {
+            setFotoAtual(fotoPrincipal);
+          } else {
+            // Se só tiver placeholder, usar ele mesmo
+            setFotoAtual(fotoPrincipal);
+          }
+          
+          // Buscar fotos secundárias (se existirem)
+          const fotos = [];
+          
+          // Verificar se há fotos secundárias em diferentes campos
+          if (produtoData.fotos && Array.isArray(produtoData.fotos)) {
+            produtoData.fotos.forEach(foto => {
+              const photoUrl = foto?.imageData || foto?.url_imagem || foto?.url || foto;
+              // Só adicionar se for uma URL válida (não placeholder e diferente da principal)
+              if (photoUrl && 
+                  typeof photoUrl === 'string' && 
+                  photoUrl !== fotoPrincipal && 
+                  (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) &&
+                  !photoUrl.includes('placeholder.com') &&
+                  !fotos.includes(photoUrl)) {
+                fotos.push(photoUrl);
+              }
+            });
+          }
+          
+          // Verificar outros campos possíveis para fotos secundárias
+          if (produtoData.fotos_secundarias && Array.isArray(produtoData.fotos_secundarias)) {
+            produtoData.fotos_secundarias.forEach(foto => {
+              const photoUrl = foto?.imageData || foto?.url_imagem || foto?.url || foto;
+              if (photoUrl && 
+                  typeof photoUrl === 'string' && 
+                  photoUrl !== fotoPrincipal && 
+                  (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) &&
+                  !photoUrl.includes('placeholder.com') &&
+                  !fotos.includes(photoUrl)) {
+                fotos.push(photoUrl);
+              }
+            });
+          }
+          
+          // Verificar campo photos primeiro (formato mais comum: array com photo_id e imageData)
+          if (produtoData.photos && Array.isArray(produtoData.photos)) {
+            produtoData.photos.forEach(photo => {
+              // Priorizar imageData (formato usado pela API)
+              const photoUrl = photo?.imageData || photo?.url_imagem || photo?.url || photo;
+              if (photoUrl && 
+                  typeof photoUrl === 'string' && 
+                  photoUrl !== fotoPrincipal && 
+                  (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) &&
+                  !photoUrl.includes('placeholder.com') &&
+                  !fotos.includes(photoUrl)) {
+                fotos.push(photoUrl);
+                console.log('📸 Foto secundária encontrada:', photoUrl);
+              }
+            });
+          }
+          
+          console.log('📸 Total de fotos secundárias encontradas:', fotos.length);
+          if (fotos.length > 0) {
+            console.log('📸 URLs das fotos secundárias:', fotos);
+          }
+          setFotosSecundarias(fotos);
+          
+          // Buscar dados da empresa se houver empresa_id ou objeto Empresa
+          // Primeiro, tentar usar empresa_id direto
+          let empresaId = produtoData.empresa_id || produtoData.Empresa?.empresa_id || produtoData.Empresa?.usuario_id;
+          
+          // Se não tiver empresa_id, usar a primeira empresa autorizada
+          if (!empresaId && produtoData.empresas_autorizadas && Array.isArray(produtoData.empresas_autorizadas) && produtoData.empresas_autorizadas.length > 0) {
+            empresaId = produtoData.empresas_autorizadas[0];
+            console.log('🏢 Usando primeira empresa autorizada:', empresaId);
+          }
+          
+          if (empresaId) {
+            try {
+              const empresaResponse = await axios.get(
+                `https://back-pdv-production.up.railway.app/usuarios/${empresaId}`
+              );
+              setEmpresa(empresaResponse.data);
+              console.log('🏢 Empresa encontrada:', empresaResponse.data);
+            } catch (empresaError) {
+              console.warn('⚠️ Erro ao buscar dados da empresa:', empresaError);
+              // Se não conseguir buscar, verificar se vem no produto
+              if (produtoData.Empresa) {
+                setEmpresa(produtoData.Empresa);
+              }
+            }
+          } else if (produtoData.Empresa) {
+            // Se a empresa já vier no produto
+            setEmpresa(produtoData.Empresa);
+            console.log('🏢 Empresa veio no produto:', produtoData.Empresa);
+          } else {
+            console.warn('⚠️ Nenhuma informação de empresa encontrada para o produto');
+          }
         }
       } catch (error) {
         console.error("Erro ao buscar detalhes do produto:", error);
@@ -34,6 +216,68 @@ function ProductListDetails() {
 
     fetchProduto();
   }, [id]);
+  
+  // Atualizar título e favicon quando empresa ou produto mudar
+  useEffect(() => {
+    if (empresa || produto) {
+      const empresaNome = empresa?.nome || empresa?.razao_social || empresa?.nome_fantasia || '';
+      const produtoNome = produto?.nome || '';
+      
+      let titulo;
+      if (empresaNome && produtoNome) {
+        titulo = `${produtoNome} - ${empresaNome}`;
+      } else if (empresaNome) {
+        titulo = empresaNome;
+      } else if (produtoNome) {
+        titulo = produtoNome;
+      } else {
+        titulo = 'Detalhes do Produto';
+      }
+      
+      // Atualizar título da página
+      document.title = titulo;
+      console.log('📝 Título da página atualizado:', titulo);
+      
+      // Atualizar favicon com logo da empresa
+      if (empresa) {
+        const logoEmpresa = empresa.logo || 
+                           empresa.logo_url ||
+                           empresa.foto_perfil || 
+                           empresa.foto_principal ||
+                           empresa.imageData ||
+                           empresa.url_logo;
+        
+        if (logoEmpresa && (logoEmpresa.startsWith('http://') || logoEmpresa.startsWith('https://'))) {
+          // Remover favicons antigos
+          const existingFavicons = document.querySelectorAll('link[rel="icon"]');
+          existingFavicons.forEach(fav => fav.remove());
+          
+          // Criar novo favicon
+          const link = document.createElement('link');
+          link.rel = 'icon';
+          link.type = 'image/png';
+          link.href = logoEmpresa;
+          document.head.appendChild(link);
+          
+          console.log('✅ Favicon atualizado com logo da empresa:', logoEmpresa);
+        } else if (logoEmpresa) {
+          console.warn('⚠️ Logo da empresa não é uma URL válida:', logoEmpresa);
+        }
+      }
+      
+      // Cleanup: restaurar título e favicon originais quando sair da página
+      return () => {
+        document.title = 'E-commerce';
+        // Restaurar favicon padrão
+        const existingFavicons = document.querySelectorAll('link[rel="icon"]');
+        existingFavicons.forEach(fav => {
+          if (!fav.href.includes('seu-favicon.png') && !fav.href.includes('favicon-32x32.png') && !fav.href.includes('favicon-64x64.png')) {
+            fav.remove();
+          }
+        });
+      };
+    }
+  }, [empresa, produto]);
 
   const handleBack = () => {
     navigate(-1);
@@ -44,17 +288,6 @@ function ProductListDetails() {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
-  };
-
-  // Função para obter a URL da imagem do produto
-  const getImageUrl = (produto) => {
-    if (!produto) return 'https://via.placeholder.com/600x400?text=Sem+Imagem';
-    // Tenta diferentes campos possíveis para a imagem
-    return produto.foto_principal || 
-           produto.imageData || 
-           produto.image || 
-           produto.url_imagem || 
-           'https://via.placeholder.com/600x400?text=Sem+Imagem';
   };
 
   const handleAdicionarCarrinho = () => {
@@ -112,15 +345,68 @@ function ProductListDetails() {
               <div className="main-carousel">
                 <div className="slide-container">
                   <img 
-                    src={getImageUrl(produto)} 
+                    src={fotoAtual || getImageUrl(produto)} 
                     alt={produto.nome}
                     className="active-slide"
+                    loading="lazy"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/600x400?text=Imagem+Indisponível';
+                      // Prevenir loop infinito de requisições
+                      if (e.target.dataset.errorHandled) return;
+                      e.target.dataset.errorHandled = 'true';
+                      e.target.src = getPlaceholderImage();
                     }}
                   />
                 </div>
               </div>
+              
+              {/* Fotos secundárias abaixo da foto principal */}
+              {fotosSecundarias.length > 0 && (
+                <div className="secondary-photos-container">
+                  <h3 className="secondary-photos-title">Outras Fotos</h3>
+                  <div className="secondary-photos-grid">
+                    {fotosSecundarias.map((foto, index) => (
+                      <div
+                        key={index}
+                        className={`secondary-photo ${fotoAtual === foto ? 'active' : ''}`}
+                        onClick={() => setFotoAtual(foto)}
+                      >
+                        <img
+                          src={foto}
+                          alt={`${produto.nome} - Foto ${index + 2}`}
+                          loading="lazy"
+                          onError={(e) => {
+                            // Prevenir loop infinito de requisições
+                            if (e.target.dataset.errorHandled) return;
+                            e.target.dataset.errorHandled = 'true';
+                            // Data URI para placeholder menor (150x100)
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDE1MCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik03NSA0MUM4My4yODQzIDQxIDkwIDQ3LjcxNTcgOTAgNTZDMTAwIDY0LjI4NDMgODMuMjg0MyA3MSA3NSA3MUM2Ni43MTU3IDcxIDYwIDY0LjI4NDMgNjAgNTZDNjAgNDcuNzE1NyA2Ni43MTU3IDQxIDc1IDQxWiIgZmlsbD0iI0NCRDVFRSIvPgo8cGF0aCBkPSJNNTAgODBDNTAgNzguNzkwMiA1Mi43OTAyIDc3IDU2IDc3SDk0Qzk3LjIwOTggNzcgMTAwIDc4Ljc5MDIgMTAwIDgwVjkyQzEwMCA5NC4yMDk4IDk3LjIwOTggOTYgOTQgOTZINTZDNTIuNzkwMiA5NiA1MCA5NC4yMDk4IDUwIDkyVjgwWiIgZmlsbD0iI0NCRDVFRSIvPgo8L3N2Zz4=';
+                          }}
+                        />
+                      </div>
+                    ))}
+                    {/* Incluir foto principal nas secundárias também (exceto se já estiver lá) */}
+                    {produto && !fotosSecundarias.includes(getImageUrl(produto)) && (
+                      <div
+                        className={`secondary-photo ${fotoAtual === getImageUrl(produto) ? 'active' : ''}`}
+                        onClick={() => setFotoAtual(getImageUrl(produto))}
+                      >
+                        <img
+                          src={getImageUrl(produto)}
+                          alt={`${produto.nome} - Foto Principal`}
+                          loading="lazy"
+                          onError={(e) => {
+                            // Prevenir loop infinito de requisições
+                            if (e.target.dataset.errorHandled) return;
+                            e.target.dataset.errorHandled = 'true';
+                            // Data URI para placeholder menor (150x100)
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDE1MCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik03NSA0MUM4My4yODQzIDQxIDkwIDQ3LjcxNTcgOTAgNTZDMTAwIDY0LjI4NDMgODMuMjg0MyA3MSA3NSA3MUM2Ni43MTU3IDcxIDYwIDY0LjI4NDMgNjAgNTZDNjAgNDcuNzE1NyA2Ni43MTU3IDQxIDc1IDQxWiIgZmlsbD0iI0NCRDVFRSIvPgo8cGF0aCBkPSJNNTAgODBDNTAgNzguNzkwMiA1Mi43OTAyIDc3IDU2IDc3SDk0Qzk3LjIwOTggNzcgMTAwIDc4Ljc5MDIgMTAwIDgwVjkyQzEwMCA5NC4yMDk4IDk3LjIwOTggOTYgOTQgOTZINTZDNTIuNzkwMiA5NiA1MCA5NC4yMDk4IDUwIDkyVjgwWiIgZmlsbD0iI0NCRDVFRSIvPgo8L3N2Zz4=';
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           

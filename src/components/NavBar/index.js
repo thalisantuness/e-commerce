@@ -8,21 +8,78 @@ import "./styles.css";
 export default function NavBar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
+  const [userPhoto, setUserPhoto] = useState("");
+  const [photoError, setPhotoError] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState("produtos"); // "produtos", "pedidos", "imoveis"
   const navigate = useNavigate();
   const { calcularQuantidadeTotal } = useProduto();
 
-  useEffect(() => {
+  // Função para carregar dados do usuário
+  const loadUserData = () => {
     const token = localStorage.getItem("token");
     const user = localStorage.getItem("user_name") || localStorage.getItem("userName");
+    // Buscar foto_perfil primeiro, depois outros campos possíveis
+    const photo = localStorage.getItem("user_photo") || 
+                   localStorage.getItem("userPhoto") || 
+                   localStorage.getItem("user_foto_perfil") ||
+                   "";
     
     if (token) {
       setIsLoggedIn(true);
       setUserName(user || "Usuário");
+      setUserPhoto(photo);
+      setPhotoError(false); // Resetar erro ao carregar novos dados
+      
+      // Debug para verificar foto
+      if (photo) {
+        console.log("👤 Foto do usuário carregada na NavBar:", photo);
+      }
+    } else {
+      setIsLoggedIn(false);
+      setUserName("");
+      setUserPhoto("");
+      setPhotoError(false);
     }
+  };
+
+  useEffect(() => {
+    loadUserData();
+
+    // Listener para mudanças no localStorage (quando usuário faz login em outra aba)
+    const handleStorageChange = (e) => {
+      if (e.key === "token" || e.key === "user_name" || e.key === "user_photo") {
+        loadUserData();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
+
+  // Verificar mudanças no localStorage periodicamente (para atualizar após login na mesma aba)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentToken = localStorage.getItem("token");
+      const hasToken = !!currentToken;
+      
+      if (hasToken !== isLoggedIn) {
+        loadUserData();
+      } else if (hasToken) {
+        // Verificar se a foto mudou
+        const currentPhoto = localStorage.getItem("user_photo");
+        if (currentPhoto !== userPhoto) {
+          loadUserData();
+        }
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isLoggedIn, userPhoto]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -33,8 +90,10 @@ export default function NavBar() {
     localStorage.removeItem("user_email");
     localStorage.removeItem("user_type");
     localStorage.removeItem("user_phone");
+    localStorage.removeItem("user_photo");
     setIsLoggedIn(false);
     setUserName("");
+    setUserPhoto("");
     setShowDropdown(false);
     navigate("/");
   };
@@ -158,12 +217,42 @@ export default function NavBar() {
                 className="user-button"
                 onClick={() => setShowDropdown(!showDropdown)}
               >
-                <FaUser className="user-icon" />
+                {userPhoto && !photoError ? (
+                  <img 
+                    src={userPhoto} 
+                    alt={`Avatar de ${userName}`} 
+                    className="user-avatar"
+                    onError={() => {
+                      console.log("⚠️ Erro ao carregar foto do usuário, usando ícone");
+                      setPhotoError(true);
+                    }}
+                  />
+                ) : (
+                  <FaUser className="user-icon" />
+                )}
                 <span className="user-name">{userName}</span>
               </button>
               
               {showDropdown && (
                 <div className="dropdown-menu">
+                  <Link 
+                    to="/perfil" 
+                    className="dropdown-item"
+                    onClick={() => setShowDropdown(false)}
+                  >
+                    {userPhoto && !photoError ? (
+                      <img 
+                        src={userPhoto} 
+                        alt={`Avatar de ${userName}`} 
+                        className="user-avatar"
+                        onError={() => setPhotoError(true)}
+                      />
+                    ) : (
+                      <FaUser className="dropdown-icon" />
+                    )}
+                    Meu Perfil
+                  </Link>
+                  {/* ITEM PAINEL ADMIN DA PARETE DE IMOVEIS OCULTADO
                   <Link 
                     to="/imovel-list-admin" 
                     className="dropdown-item"
@@ -172,6 +261,7 @@ export default function NavBar() {
                     <FaUser className="dropdown-icon" />
                     Painel Admin
                   </Link>
+                  */}
                   <button 
                     className="dropdown-item logout-button"
                     onClick={handleLogout}

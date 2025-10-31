@@ -107,8 +107,9 @@
 .active-slide {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  background-color: #f8f9fa;
 }
 
 .carousel-button {
@@ -174,6 +175,59 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Fotos secundárias */
+.secondary-photos-container {
+  margin-top: 1.5rem;
+}
+
+.secondary-photos-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.secondary-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+
+.secondary-photo {
+  aspect-ratio: 4/3;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  background-color: #f8f9fa;
+}
+
+.secondary-photo:hover {
+  border-color: #3182ce;
+  transform: scale(1.05);
+}
+
+.secondary-photo.active {
+  border-color: #3182ce;
+  border-width: 3px;
+  box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
+}
+
+.secondary-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .secondary-photos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.5rem;
+  }
 }
 
 .no-photos {

@@ -69,33 +69,40 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  transition: box-shadow 0.3s ease;
   text-decoration: none;
   color: inherit;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  transform: none !important;
 }
 
 .our-solutions-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transform: none !important;
 }
 
 .our-solutions-image-container {
   position: relative;
   width: 100%;
-  height: 250px;
+  height: 350px;
   overflow: hidden;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.our-solutions-image-container:hover .our-solutions-image {
+  transform: none !important;
 }
 
 .our-solutions-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.our-solutions-card:hover .our-solutions-image {
-  transform: scale(1.05);
+  object-fit: contain;
+  transform: none !important;
+  transition: none;
 }
 
 .our-solutions-badge {
@@ -253,7 +260,7 @@
   }
   
   .our-solutions-image-container {
-    height: 200px;
+    height: 280px;
   }
   
   .our-solutions-features {
@@ -376,16 +383,7 @@
   100% { transform: scale(1); }
 }
 
-/* Ajuste no card para os novos botões */
-.our-solutions-card {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-}
+/* Removido estilo duplicado - já definido acima */
 
 .our-solutions-card-link {
   text-decoration: none;

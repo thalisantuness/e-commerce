@@ -188,7 +188,7 @@
   border-radius: 25px;
   cursor: pointer;
   transition: background 0.3s ease;
-  color: #4a5568;
+  color: #2d3748;
 }
 
 .user-button:hover {
@@ -200,9 +200,18 @@
   color: #3182ce;
 }
 
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e2e8f0;
+}
+
 .user-name {
   font-weight: 500;
   font-size: 0.9rem;
+  color: #2d3748;
 }
 
 /* Dropdown Menu */
@@ -225,7 +234,7 @@
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   text-decoration: none;
-  color: #4a5568;
+  color: #2d3748;
   transition: background 0.3s ease;
   border: none;
   background: none;
@@ -233,6 +242,7 @@
   text-align: left;
   cursor: pointer;
   font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .dropdown-item:hover {
@@ -243,6 +253,14 @@
 .dropdown-icon {
   font-size: 0.8rem;
   width: 16px;
+}
+
+.dropdown-item .user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e2e8f0;
 }
 
 .logout-button {
