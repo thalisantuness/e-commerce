@@ -11,6 +11,7 @@ import ProductListDetails from "./pages/product-details";
 import RegisterImovel from "./pages/register-imovel-admin";
 import ImovelListAdminPage from "./pages/imovel-list-admin";
 import LoginAdmin from "./pages/login-admin";
+import Cadastrar from "./pages/cadastrar";
 import ProtectRoute from "./components/ProtectRoute";
 import EditImovel from "./pages/edit-imovel-admin";
 import Cart from "./pages/cart";
@@ -28,6 +29,7 @@ function App() {
             <Route path="/produto-list" element={<ProdutoListPage />} />
             <Route path="/detalhes-produto/:id" element={<ProductListDetails />} />
             <Route path="/login-admin" element={<LoginAdmin />} />
+            <Route path="/cadastrar" element={<Cadastrar />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/meus-pedidos" element={<MeusPedidos />} />
             <Route

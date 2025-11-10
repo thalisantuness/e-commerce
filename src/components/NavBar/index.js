@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaUser, FaSignOutAlt, FaShoppingCart, FaSearch } from "react-icons/fa";
 import { useProduto } from "../../context/ProdutoContext";
 import Logo from "../../assets/logo-transparente.png";
@@ -12,9 +12,11 @@ export default function NavBar() {
   const [photoError, setPhotoError] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchType, setSearchType] = useState("produtos"); // "produtos", "pedidos", "imoveis"
   const navigate = useNavigate();
-  const { calcularQuantidadeTotal } = useProduto();
+  const location = useLocation();
+  const { calcularQuantidadeTotal, empresaAtual, setEmpresaAtual } = useProduto();
+  const [empresaLogo, setEmpresaLogo] = useState(null);
+  const [empresaNome, setEmpresaNome] = useState(null);
 
   // Função para carregar dados do usuário
   const loadUserData = () => {
@@ -61,6 +63,61 @@ export default function NavBar() {
     };
   }, []);
 
+  // Função para obter a logo da empresa
+  const getEmpresaLogo = (empresa) => {
+    if (!empresa) return null;
+    
+    const logo = empresa.logo || 
+                 empresa.logo_url ||
+                 empresa.foto_perfil || 
+                 empresa.foto_principal ||
+                 empresa.imageData ||
+                 empresa.url_logo;
+    
+    // Retornar apenas se for uma URL válida ou base64
+    if (logo && (logo.startsWith('http://') || logo.startsWith('https://') || logo.startsWith('data:image'))) {
+      return logo;
+    }
+    
+    return null;
+  };
+
+  // A empresa agora é definida pelos componentes de produtos (ProdutosList, HomeProducts, ProductDetails)
+  // Não precisamos buscar a empresa do usuário logado aqui
+
+  // Atualizar logo da empresa quando empresaAtual mudar
+  useEffect(() => {
+    if (empresaAtual) {
+      const logo = getEmpresaLogo(empresaAtual);
+      setEmpresaLogo(logo);
+      setEmpresaNome(empresaAtual.nome || empresaAtual.razao_social || empresaAtual.nome_fantasia || null);
+      console.log('🎨 Logo da empresa atualizada:', logo);
+    } else {
+      setEmpresaLogo(null);
+      setEmpresaNome(null);
+    }
+  }, [empresaAtual]);
+
+  // Limpar empresa quando sair das páginas de produtos
+  // A empresa será redefinida quando entrar em páginas que carregam produtos
+  useEffect(() => {
+    // Verificar se está em páginas de produtos
+    const isProdutoPage = 
+      location.pathname.includes('/detalhes-produto') ||
+      location.pathname.includes('/product-details') ||
+      location.pathname.includes('/produto/') ||
+      location.pathname === '/produto-list' ||
+      location.pathname === '/';
+    
+    // Se não estiver em páginas de produtos, limpar a empresa após um delay
+    if (!isProdutoPage) {
+      const timer = setTimeout(() => {
+        setEmpresaAtual(null);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname, setEmpresaAtual]);
+
   // Verificar mudanças no localStorage periodicamente (para atualizar após login na mesma aba)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -95,33 +152,15 @@ export default function NavBar() {
     setUserName("");
     setUserPhoto("");
     setShowDropdown(false);
+    setEmpresaAtual(null); // Limpar empresa ao fazer logout
     navigate("/");
   };
 
-  // FUNÇÃO DE BUSCA UNIFICADA - Busca em produtos, pedidos ou imóveis
+  // Função de busca - apenas produtos
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      // Redireciona baseado no tipo de busca selecionado
-      switch(searchType) {
-        case "produtos":
-          navigate(`/produto-list?search=${encodeURIComponent(searchTerm)}`);
-          break;
-        case "pedidos":
-          if (isLoggedIn) {
-            navigate(`/meus-pedidos?search=${encodeURIComponent(searchTerm)}`);
-          } else {
-            alert("Você precisa estar logado para buscar pedidos");
-            navigate("/login-admin");
-          }
-          break;
-        case "imoveis":
-          // CÓDIGO PARA BUSCA DE IMÓVEIS (mantido para uso futuro)
-          navigate(`/imovel-list?search=${encodeURIComponent(searchTerm)}`);
-          break;
-        default:
-          navigate(`/produto-list?search=${encodeURIComponent(searchTerm)}`);
-      }
+      navigate(`/produto-list?search=${encodeURIComponent(searchTerm)}`);
       setSearchTerm("");
     }
   };
@@ -147,32 +186,30 @@ export default function NavBar() {
   return (
     <header className="navbar-ecommerce">
       <div className="navbar-container">
-        {/* Logo */}
+        {/* Logo - Mostra logo da empresa se disponível, senão mostra logo padrão */}
         <Link to="/" className="logo-section">
-          <img src={Logo} className="logo-img" alt="Logo" />
+          {empresaLogo ? (
+            <img 
+              src={empresaLogo} 
+              className="logo-img" 
+              alt={empresaNome || "Logo da empresa"}
+              style={{ maxHeight: '60px', objectFit: 'contain' }}
+              onError={(e) => {
+                // Se a logo da empresa falhar, usar logo padrão
+                e.target.src = Logo;
+              }}
+            />
+          ) : (
+            <img src={Logo} className="logo-img" alt="Logo" />
+          )}
         </Link>
 
-        {/* Barra de Pesquisa Unificada */}
+        {/* Barra de Pesquisa */}
         <div className="search-section">
           <form onSubmit={handleSearch} className="search-form">
-            <select
-              value={searchType}
-              onChange={(e) => setSearchType(e.target.value)}
-              className="search-type-select"
-            >
-              <option value="produtos">Produtos</option>
-              <option value="pedidos">Pedidos</option>
-              {/* <option value="imoveis">Imóveis</option> */}
-            </select>
             <input
               type="text"
-              placeholder={
-                searchType === "produtos" 
-                  ? "Buscar produtos..." 
-                  : searchType === "pedidos" 
-                  ? "Buscar pedidos..." 
-                  : "Buscar imóveis..."
-              }
+              placeholder="Buscar produtos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"

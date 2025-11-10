@@ -16,8 +16,9 @@ function ProductListDetails() {
   const [fotoAtual, setFotoAtual] = useState(null);
   const [fotosSecundarias, setFotosSecundarias] = useState([]);
   const [empresa, setEmpresa] = useState(null);
+  const [mensagemCustomizacao, setMensagemCustomizacao] = useState('');
   const navigate = useNavigate();
-  const { adicionarAoCarrinho } = useProduto();
+  const { adicionarAoCarrinho, setEmpresaAtual } = useProduto();
 
   // Data URI para placeholder - não faz requisição HTTP
   const getPlaceholderImage = () => {
@@ -191,17 +192,20 @@ function ProductListDetails() {
                 `https://back-pdv-production.up.railway.app/usuarios/${empresaId}`
               );
               setEmpresa(empresaResponse.data);
+              setEmpresaAtual(empresaResponse.data); // Atualizar empresa no contexto para o NavBar
               console.log('🏢 Empresa encontrada:', empresaResponse.data);
             } catch (empresaError) {
               console.warn('⚠️ Erro ao buscar dados da empresa:', empresaError);
               // Se não conseguir buscar, verificar se vem no produto
               if (produtoData.Empresa) {
                 setEmpresa(produtoData.Empresa);
+                setEmpresaAtual(produtoData.Empresa); // Atualizar empresa no contexto para o NavBar
               }
             }
           } else if (produtoData.Empresa) {
             // Se a empresa já vier no produto
             setEmpresa(produtoData.Empresa);
+            setEmpresaAtual(produtoData.Empresa); // Atualizar empresa no contexto para o NavBar
             console.log('🏢 Empresa veio no produto:', produtoData.Empresa);
           } else {
             console.warn('⚠️ Nenhuma informação de empresa encontrada para o produto');
@@ -215,7 +219,15 @@ function ProductListDetails() {
     };
 
     fetchProduto();
-  }, [id]);
+  }, [id, setEmpresaAtual]);
+  
+  // Garantir que a empresa não seja limpa enquanto estiver nesta página
+  useEffect(() => {
+    // Se a empresa foi definida, garantir que permaneça enquanto estiver nesta página
+    if (empresa) {
+      setEmpresaAtual(empresa);
+    }
+  }, [empresa, setEmpresaAtual]);
   
   // Atualizar título e favicon quando empresa ou produto mudar
   useEffect(() => {
@@ -292,11 +304,14 @@ function ProductListDetails() {
 
   const handleAdicionarCarrinho = () => {
     if (produto) {
+      const mensagem = mensagemCustomizacao.trim() || null;
       for (let i = 0; i < quantidade; i++) {
-        adicionarAoCarrinho(produto);
+        adicionarAoCarrinho(produto, mensagem);
       }
       // Feedback visual
       alert(`${quantidade} ${quantidade === 1 ? 'produto adicionado' : 'produtos adicionados'} ao carrinho!`);
+      // Limpar mensagem após adicionar
+      setMensagemCustomizacao('');
     }
   };
 
@@ -439,16 +454,8 @@ function ProductListDetails() {
                   <span className="product-text-black">{produto.quantidade} em estoque</span>
                 </div>
                 <div className="feature-item">
-                  <FaTag className="feature-icon" />
-                  <span className="product-text-black">{produto.tipo_comercializacao}</span>
-                </div>
-                <div className="feature-item">
                   <FaWarehouse className="feature-icon" />
                   <span className="product-text-black">{produto.tipo_produto}</span>
-                </div>
-                <div className="feature-item">
-                  <FaShoppingCart className="feature-icon" />
-                  <span className="product-text-black">Disponível</span>
                 </div>
               </div>
 
@@ -461,40 +468,6 @@ function ProductListDetails() {
                 </p>
               </div>
 
-              <div className="property-details-grid">
-                <div className="details-section">
-                  <h4 className="section-title">Informações do Produto</h4>
-                  <ul className="details-list">
-                    <li className="product-text-black">
-                      <strong>Nome:</strong> {produto.nome}
-                    </li>
-                    <li className="product-text-black">
-                      <strong>Categoria:</strong> {produto.tipo_produto}
-                    </li>
-                    <li className="product-text-black">
-                      <strong>Tipo:</strong> {produto.tipo_comercializacao}
-                    </li>
-                    <li className="product-text-black">
-                      <strong>Estoque:</strong> {produto.quantidade} unidades
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="details-section">
-                  <h4 className="section-title">Valores</h4>
-                  <ul className="details-list">
-                    <li className="product-text-black">
-                      <strong>Preço:</strong> {formatCurrency(produto.valor)}
-                    </li>
-                    <li className="product-text-black">
-                      <strong>Status:</strong> {produto.quantidade > 0 ? 'Disponível' : 'Esgotado'}
-                    </li>
-                    <li className="product-text-black">
-                      <strong>Cadastro:</strong> {new Date(produto.data_cadastro).toLocaleDateString('pt-BR')}
-                    </li>
-                  </ul>
-                </div>
-              </div>
 
               <div className="product-actions-section">
                 <div className="quantity-selector">
@@ -519,6 +492,44 @@ function ProductListDetails() {
                   <span className="stock-info">
                     {produto.quantidade} disponíveis
                   </span>
+                </div>
+
+                <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    color: '#2d3748', 
+                    fontWeight: '500',
+                    fontSize: '14px'
+                  }}>
+                    Recado para o vendedor (customização):
+                  </label>
+                  <textarea
+                    value={mensagemCustomizacao}
+                    onChange={(e) => setMensagemCustomizacao(e.target.value)}
+                    placeholder="Ex: Camisa 10 nome Thalis"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontFamily: 'inherit',
+                      resize: 'vertical',
+                      minHeight: '80px',
+                      boxSizing: 'border-box',
+                      color: '#2d3748'
+                    }}
+                    maxLength={500}
+                  />
+                  <div style={{ 
+                    fontSize: '12px', 
+                    color: '#718096', 
+                    marginTop: '4px',
+                    textAlign: 'right'
+                  }}>
+                    {mensagemCustomizacao.length}/500
+                  </div>
                 </div>
 
                 <button 

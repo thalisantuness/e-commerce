@@ -1,8 +1,15 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./styles.css";
 import { TypeAnimation } from 'react-type-animation';
 
-function Highlights() {  
+function Highlights() {
+  const navigate = useNavigate();
+
+  const handleVerMais = () => {
+    navigate('/produto-list');
+  };
+
   return (
     <div className="page-container">
     
@@ -10,11 +17,11 @@ function Highlights() {
       sequence={[
         'Vista o amor pelo seu time.',
         1000, 
-        'Seu time, seu nome, seu estilo.”',
+        'Seu time, seu nome, seu estilo.',
         1000,
         'Camisas que representam o que corre nas suas veias.',
         1000,
-        'Pra quem carrega o time no peito — literalmente.',
+        'Para quem carrega o time no peito, literalmente.',
         1000
       ]}
       wrapper="h1"
@@ -25,7 +32,7 @@ function Highlights() {
 
       <p> 
       Preparado para essa experiência?</p> 
-      <button>Entre em contato</button>
+      <button onClick={handleVerMais}>Ver Mais</button>
 
 
 

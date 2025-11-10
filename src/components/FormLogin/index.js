@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./styles.css";
 import { ToastContainer, toast } from 'react-toastify';
 
 export default function FormLogin() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     senha: "",
@@ -144,6 +146,38 @@ export default function FormLogin() {
             )}
           </button>
         </form>
+        
+        <div style={{ marginTop: '24px', textAlign: 'center' }}>
+          <p style={{ color: '#718096', fontSize: '14px', marginBottom: '12px' }}>
+            Não tem uma conta?
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/cadastrar')}
+            style={{
+              background: 'transparent',
+              border: '1px solid #3182ce',
+              color: '#3182ce',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              width: '100%'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#3182ce';
+              e.target.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'transparent';
+              e.target.style.color = '#3182ce';
+            }}
+          >
+            Cadastrar-se
+          </button>
+        </div>
       </div>
     </div>
   );

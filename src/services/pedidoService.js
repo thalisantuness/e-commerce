@@ -210,12 +210,21 @@ export async function criarPedidosCarrinho(carrinho, empresaIdPadrao, dataHoraEn
         // Usar a empresa_id do produto se existir, caso contrário usa a empresa padrão
         const empresaId = item.empresa_id || empresaIdPadrao;
         
+        // Combinar observação geral com mensagem de customização do item
+        let observacaoFinal = observacao || '';
+        if (item.mensagemCustomizacao) {
+          const customizacao = `Customização: ${item.mensagemCustomizacao}`;
+          observacaoFinal = observacaoFinal 
+            ? `${observacaoFinal}\n${customizacao}` 
+            : customizacao;
+        }
+
         const pedidoData = {
           produto_id: item.produto_id,
           empresa_id: empresaId,
           quantidade: item.quantidade,
           ...(dataHoraEntrega ? { data_hora_entrega: dataHoraEntrega } : { data_hora_entrega: null }), // NULL permitido pelo banco
-          observacao: observacao
+          observacao: observacaoFinal
         };
 
         console.log(`📦 Criando pedido para produto ${item.produto_id} com empresa ${empresaId}`);

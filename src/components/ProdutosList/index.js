@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useProduto } from "../../context/ProdutoContext";
 import axios from "axios";
-import { FaShoppingCart, FaEye, FaBox, FaTag, FaWarehouse } from "react-icons/fa";
+import { FaShoppingCart, FaEye, FaBox, FaWarehouse, FaTimes } from "react-icons/fa";
 import "./styles.css";
 
 function ProdutosList() {
@@ -10,9 +10,9 @@ function ProdutosList() {
   const [produtosFiltrados, setProdutosFiltrados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const { adicionarAoCarrinho } = useProduto();
+  const { adicionarAoCarrinho, setEmpresaAtual } = useProduto();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -63,6 +63,71 @@ function ProdutosList() {
     return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjhGQUZCIi8+CjxwYXRoIGQ9Ik0xNTAgNzBDMTYzLjYgNzAgMTc1IDgxLjQgMTc1IDk1QzE3NSAxMDguNiAxNjMuNiAxMjAgMTUwIDEyMEMxMzYuNCAxMjAgMTI1IDEwOC42IDEyNSA5NUMxMjUgODEuNCAxMzYuNCA3MCAxNTAgNzBaIiBmaWxsPSIjQ0JENUUwIi8+CjxwYXRoIGQ9Ik03NSAxNTBDNzUgMTQ3Ljc5MSA3Ny43OTAyIDE0NSA4MSAxNDVIMTE5QzEyMi4yMDk4IDE0NSAxMjUgMTQ3Ljc5MSAxMjUgMTUwVjE3MEMxMjUgMTcyLjIwOTggMTIyLjIwOTggMTc1IDExOSAxNzVIODFDNzcuNzkwMiAxNzUgNzUgMTcyLjIwOTggNzUgMTcwVjE1MFoiIGZpbGw9IiNDQkQ1RTAiLz4KPC9zdmc+';
   };
 
+  // Função para identificar e carregar a empresa dos produtos
+  const identificarEmpresaDosProdutos = async (produtos) => {
+    try {
+      // Coletar todos os IDs de empresas dos produtos
+      const empresasIds = new Set();
+      
+      produtos.forEach(produto => {
+        // Verificar empresas_autorizadas (pode ser array ou null)
+        if (produto.empresas_autorizadas && Array.isArray(produto.empresas_autorizadas)) {
+          produto.empresas_autorizadas.forEach(empresaId => {
+            if (empresaId) empresasIds.add(empresaId);
+          });
+        }
+        
+        // Verificar empresa_id direto (se existir)
+        if (produto.empresa_id) {
+          empresasIds.add(produto.empresa_id);
+        }
+      });
+      
+      console.log('🏢 IDs de empresas encontrados nos produtos:', Array.from(empresasIds));
+      
+      // Se houver apenas uma empresa, buscar seus dados
+      if (empresasIds.size === 1) {
+        const empresaId = Array.from(empresasIds)[0];
+        console.log('🏢 Buscando dados da empresa:', empresaId);
+        
+        try {
+          const empresaResponse = await axios.get(
+            `https://back-pdv-production.up.railway.app/usuarios/${empresaId}`
+          );
+          
+          const empresaData = empresaResponse.data;
+          console.log('🏢 Empresa encontrada:', empresaData);
+          
+          // Definir empresa no contexto para o NavBar exibir a logo
+          setEmpresaAtual(empresaData);
+        } catch (error) {
+          console.error('⚠️ Erro ao buscar dados da empresa:', error);
+        }
+      } else if (empresasIds.size > 1) {
+        // Se houver múltiplas empresas, usar a primeira (ou a mais frequente)
+        const empresaId = Array.from(empresasIds)[0];
+        console.log('🏢 Múltiplas empresas encontradas, usando a primeira:', empresaId);
+        
+        try {
+          const empresaResponse = await axios.get(
+            `https://back-pdv-production.up.railway.app/usuarios/${empresaId}`
+          );
+          
+          const empresaData = empresaResponse.data;
+          setEmpresaAtual(empresaData);
+        } catch (error) {
+          console.error('⚠️ Erro ao buscar dados da empresa:', error);
+        }
+      } else {
+        console.log('⚠️ Nenhuma empresa identificada nos produtos');
+        // Se não houver empresa identificada, limpar a empresa atual
+        setEmpresaAtual(null);
+      }
+    } catch (error) {
+      console.error('⚠️ Erro ao identificar empresa dos produtos:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchProdutos = async () => {
       try {
@@ -92,6 +157,9 @@ function ProdutosList() {
         } else {
           setProdutos(produtosEcommerce);
           setNotFound(false);
+          
+          // Identificar a empresa dona dos produtos
+          identificarEmpresaDosProdutos(produtosEcommerce);
         }
         setLoading(false);
       } catch (error) {
@@ -102,6 +170,7 @@ function ProdutosList() {
     };
 
     fetchProdutos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Efeito para filtrar produtos com base na busca
@@ -158,11 +227,6 @@ function ProdutosList() {
         className: "produto-feature-text"
       },
       {
-        icon: <FaTag />,
-        text: produto.tipo_comercializacao,
-        className: "produto-feature-text"
-      },
-      {
         icon: <FaWarehouse />,
         text: produto.tipo_produto,
         className: "produto-feature-text"
@@ -205,6 +269,16 @@ function ProdutosList() {
           <p>
             Mostrando {produtosFiltrados.length} resultado(s) para "{searchParams.get('search')}"
           </p>
+          <button
+            onClick={() => {
+              setSearchParams({});
+            }}
+            className="clear-filter-button"
+            title="Limpar filtro"
+          >
+            <FaTimes />
+            Limpar Filtro
+          </button>
         </div>
       )}
       <div className="produtos-grid">

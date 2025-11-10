@@ -42,7 +42,7 @@ function Statistics() {
                   <FaHeadset />
                 </div>
                 <div className="stat-content">
-                  <h3>Suporte 24/7</h3>
+                  <h3>24 HORAS</h3> 
                   <p>Atendimento Personalizado</p>
                   <span>Via WhatsApp e Email</span>
                 </div>
@@ -60,24 +60,6 @@ function Statistics() {
               </div>
             </div>
 
-            <div className="stats-features">
-              <div className="feature">
-                <span className="feature-badge">✓</span>
-                <span>Produtos Originais</span>
-              </div>
-              <div className="feature">
-                <span className="feature-badge">✓</span>
-                <span>Frete Grátis acima de R$ 199</span>
-              </div>
-              <div className="feature">
-                <span className="feature-badge">✓</span>
-                <span>Troca Fácil</span>
-              </div>
-              <div className="feature">
-                <span className="feature-badge">✓</span>
-                <span>Melhor Preço</span>
-              </div>
-            </div>
           </div>
         </section>
       </Roll>

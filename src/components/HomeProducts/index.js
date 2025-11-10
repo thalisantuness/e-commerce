@@ -9,7 +9,8 @@ function HomeProducts() {
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
   const { 
-    adicionarAoCarrinho 
+    adicionarAoCarrinho,
+    setEmpresaAtual
   } = useProduto();
 
   useEffect(() => {
@@ -25,6 +26,10 @@ function HomeProducts() {
         );
         
         setProdutos(produtosEcommerce.slice(0, 6));
+        
+        // Identificar a empresa dona dos produtos
+        identificarEmpresaDosProdutos(produtosEcommerce);
+        
         setLoading(false);
       } catch (error) {
         console.error("Erro ao buscar produtos:", error);
@@ -34,6 +39,60 @@ function HomeProducts() {
 
     fetchProdutos();
   }, []);
+
+  // Função para identificar e carregar a empresa dos produtos
+  const identificarEmpresaDosProdutos = async (produtos) => {
+    try {
+      // Coletar todos os IDs de empresas dos produtos
+      const empresasIds = new Set();
+      
+      produtos.forEach(produto => {
+        // Verificar empresas_autorizadas (pode ser array ou null)
+        if (produto.empresas_autorizadas && Array.isArray(produto.empresas_autorizadas)) {
+          produto.empresas_autorizadas.forEach(empresaId => {
+            if (empresaId) empresasIds.add(empresaId);
+          });
+        }
+        
+        // Verificar empresa_id direto (se existir)
+        if (produto.empresa_id) {
+          empresasIds.add(produto.empresa_id);
+        }
+      });
+      
+      // Se houver apenas uma empresa, buscar seus dados
+      if (empresasIds.size === 1) {
+        const empresaId = Array.from(empresasIds)[0];
+        
+        try {
+          const empresaResponse = await axios.get(
+            `https://back-pdv-production.up.railway.app/usuarios/${empresaId}`
+          );
+          
+          const empresaData = empresaResponse.data;
+          setEmpresaAtual(empresaData);
+        } catch (error) {
+          console.error('⚠️ Erro ao buscar dados da empresa:', error);
+        }
+      } else if (empresasIds.size > 1) {
+        // Se houver múltiplas empresas, usar a primeira
+        const empresaId = Array.from(empresasIds)[0];
+        
+        try {
+          const empresaResponse = await axios.get(
+            `https://back-pdv-production.up.railway.app/usuarios/${empresaId}`
+          );
+          
+          const empresaData = empresaResponse.data;
+          setEmpresaAtual(empresaData);
+        } catch (error) {
+          console.error('⚠️ Erro ao buscar dados da empresa:', error);
+        }
+      }
+    } catch (error) {
+      console.error('⚠️ Erro ao identificar empresa dos produtos:', error);
+    }
+  };
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {

@@ -472,7 +472,7 @@ function Cart() {
         <div className="cart-content">
           <div className="cart-items">
             {carrinho.map((item) => (
-              <div key={item.produto_id} className="cart-item">
+              <div key={item.carrinhoItemId || item.produto_id} className="cart-item">
                 <div className="item-image">
                   <img 
                     src={getImageUrl(item)} 
@@ -503,19 +503,32 @@ function Cart() {
                       </span>
                     ))}
                   </div>
+                  {item.mensagemCustomizacao && (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '8px 12px',
+                      backgroundColor: '#f0f9ff',
+                      border: '1px solid #bae6fd',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                      color: '#0369a1'
+                    }}>
+                      <strong>Recado:</strong> {item.mensagemCustomizacao}
+                    </div>
+                  )}
                 </div>
 
                 <div className="item-controls">
                   <div className="quantity-controls">
                     <button 
-                      onClick={() => ajustarQuantidade(item.produto_id, item.quantidade - 1)}
+                      onClick={() => ajustarQuantidade(item.produto_id, item.quantidade - 1, item.carrinhoItemId)}
                       className="quantity-btn"
                     >
                       <FaMinus />
                     </button>
                     <span className="quantity">{item.quantidade}</span>
                     <button 
-                      onClick={() => ajustarQuantidade(item.produto_id, item.quantidade + 1)}
+                      onClick={() => ajustarQuantidade(item.produto_id, item.quantidade + 1, item.carrinhoItemId)}
                       className="quantity-btn"
                     >
                       <FaPlus />
@@ -530,7 +543,7 @@ function Cart() {
                   </div>
 
                   <button 
-                    onClick={() => removerDoCarrinho(item.produto_id)}
+                    onClick={() => removerDoCarrinho(item.produto_id, item.carrinhoItemId)}
                     className="remove-btn"
                     title="Remover do carrinho"
                   >
