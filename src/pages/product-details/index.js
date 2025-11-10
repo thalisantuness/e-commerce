@@ -4,8 +4,11 @@ import Footer from "../../components/Footer";
 import { IoIosArrowBack } from "react-icons/io";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { FaBox, FaTag, FaWarehouse, FaShoppingCart, FaWhatsapp } from "react-icons/fa";
+import { FaBox, FaTag, FaWarehouse, FaShoppingCart, FaWhatsapp, FaMapMarkerAlt } from "react-icons/fa";
 import { useProduto } from "../../context/ProdutoContext";
+import { getUserId, getAuthToken, isAuthenticated, buscarDadosUsuario } from "../../services/authService";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./style.css";
 
 function ProductListDetails() {
@@ -17,6 +20,9 @@ function ProductListDetails() {
   const [fotosSecundarias, setFotosSecundarias] = useState([]);
   const [empresa, setEmpresa] = useState(null);
   const [mensagemCustomizacao, setMensagemCustomizacao] = useState('');
+  const [showEnderecoModal, setShowEnderecoModal] = useState(false);
+  const [enderecoEntrega, setEnderecoEntrega] = useState('');
+  const [salvandoEndereco, setSalvandoEndereco] = useState(false);
   const navigate = useNavigate();
   const { adicionarAoCarrinho, setEmpresaAtual } = useProduto();
 
@@ -323,6 +329,100 @@ function ProductListDetails() {
     }
   };
 
+  const handleAbrirModalEndereco = async () => {
+    setShowEnderecoModal(true);
+    
+    // Buscar endereço salvo do usuário
+    if (isAuthenticated()) {
+      try {
+        const usuario = await buscarDadosUsuario();
+        if (usuario && usuario.cliente_endereco) {
+          setEnderecoEntrega(usuario.cliente_endereco);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar endereço do usuário:", error);
+        // Não mostrar erro ao usuário, apenas deixar o campo vazio
+      }
+    }
+  };
+
+  const handleSalvarEndereco = async () => {
+    if (!enderecoEntrega.trim()) {
+      toast.error("Por favor, preencha o endereço de entrega", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      return;
+    }
+
+    const userId = getUserId();
+    const token = getAuthToken();
+
+    if (!userId || !token) {
+      toast.error("Você precisa estar logado para salvar o endereço", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      return;
+    }
+
+    setSalvandoEndereco(true);
+
+    try {
+      await axios.put(
+        `https://back-pdv-production.up.railway.app/usuarios/${userId}`,
+        {
+          cliente_endereco: enderecoEntrega.trim()
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      toast.success("Endereço de entrega salvo com sucesso!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+
+      setShowEnderecoModal(false);
+      // Não limpar o endereço, manter para próxima vez que abrir
+    } catch (error) {
+      console.error("Erro ao salvar endereço:", error);
+      toast.error(
+        error.response?.data?.message || "Erro ao salvar endereço de entrega",
+        {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        }
+      );
+    } finally {
+      setSalvandoEndereco(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -540,6 +640,35 @@ function ProductListDetails() {
                   <FaShoppingCart />
                   Adicionar ao Carrinho
                 </button>
+
+                {isAuthenticated() && (
+                  <button
+                    onClick={handleAbrirModalEndereco}
+                    className="endereco-button"
+                    style={{
+                      width: '100%',
+                      padding: '12px 20px',
+                      backgroundColor: '#48bb78',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      transition: 'background-color 0.2s',
+                      marginTop: '12px'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#38a169'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#48bb78'}
+                  >
+                    <FaMapMarkerAlt />
+                    Configurar Endereço de Entrega
+                  </button>
+                )}
               </div>
 
               <div className="contact-section">
@@ -557,7 +686,95 @@ function ProductListDetails() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Endereço de Entrega */}
+      {showEnderecoModal && (
+        <div className="modal-overlay" onClick={() => {
+          if (!salvandoEndereco) {
+            setShowEnderecoModal(false);
+            setEnderecoEntrega('');
+          }
+        }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Endereço de Entrega</h2>
+              <button
+                className="modal-close-button"
+                onClick={() => {
+                  if (!salvandoEndereco) {
+                    setShowEnderecoModal(false);
+                    setEnderecoEntrega('');
+                  }
+                }}
+                disabled={salvandoEndereco}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <label style={{
+                display: 'block',
+                marginBottom: '8px',
+                color: '#2d3748',
+                fontWeight: '500',
+                fontSize: '14px'
+              }}>
+                Endereço completo:
+              </label>
+              <textarea
+                value={enderecoEntrega}
+                onChange={(e) => setEnderecoEntrega(e.target.value)}
+                placeholder="Ex: Rua Exemplo, 123 - Bairro - Cidade/UF - CEP 12345-678"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  minHeight: '120px',
+                  boxSizing: 'border-box',
+                  color: '#2d3748'
+                }}
+                maxLength={500}
+                disabled={salvandoEndereco}
+              />
+              <div style={{
+                fontSize: '12px',
+                color: '#718096',
+                marginTop: '4px',
+                textAlign: 'right'
+              }}>
+                {enderecoEntrega.length}/500
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                onClick={() => {
+                  if (!salvandoEndereco) {
+                    setShowEnderecoModal(false);
+                    setEnderecoEntrega('');
+                  }
+                }}
+                className="modal-cancel-button"
+                disabled={salvandoEndereco}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSalvarEndereco}
+                className="modal-save-button"
+                disabled={salvandoEndereco || !enderecoEntrega.trim()}
+              >
+                {salvandoEndereco ? 'Salvando...' : 'Salvar Endereço'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
+      <ToastContainer />
       <Footer />
     </div>
   );

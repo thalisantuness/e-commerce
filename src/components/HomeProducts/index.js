@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useProduto } from "../../context/ProdutoContext";
-import { FaShoppingCart, FaEye, FaBox, FaTag, FaWarehouse } from "react-icons/fa";
+import { FaShoppingCart, FaEye, FaBox, FaWarehouse } from "react-icons/fa";
 import "./styles.css";
 
 function HomeProducts() {
@@ -171,11 +171,6 @@ function HomeProducts() {
       {
         icon: <FaBox />,
         text: `${produto.quantidade} em estoque`,
-        className: "our-solutions-feature-text-black"
-      },
-      {
-        icon: <FaTag />,
-        text: produto.tipo_comercializacao,
         className: "our-solutions-feature-text-black"
       },
       {
