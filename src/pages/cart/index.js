@@ -25,6 +25,7 @@ function Cart() {
   const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
   const empresaId = 1; // ID da empresa padrão (usado apenas como fallback se o produto não tiver empresa_id)
   const [observacao, setObservacao] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [pedidosCriados, setPedidosCriados] = useState([]); // Armazena os pedidos criados
   
   // Dados do pagamento fake

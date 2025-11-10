@@ -5,8 +5,6 @@ import HomeProducts from "../../components/HomeProducts/index";
 import Footer from "../../components/Footer/index";
 import ReactWhatsappButton from "react-whatsapp-button";
 import Statistics from "../../components/Statistics";
-import Blog from "../../components/Blog";
-import Companies from "../../components/CompaniesWorked"; 
 import { getUserName } from "../../services/authService";
 import "../../global.css";
 

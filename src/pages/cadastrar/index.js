@@ -94,7 +94,7 @@ function Cadastrar() {
         ...(formData.foto_perfil && { foto_perfil: formData.foto_perfil })
       };
 
-      const response = await axios.post(
+      await axios.post(
         "https://back-pdv-production.up.railway.app/cadastrar",
         dadosCadastro,
         { headers: { "Content-Type": "application/json" } }

@@ -38,6 +38,7 @@ function HomeProducts() {
     };
 
     fetchProdutos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Função para identificar e carregar a empresa dos produtos

@@ -69,7 +69,8 @@ function Footer() {
               <li>
                 <a 
                 href={`https://wa.me/555599293516?text=${encodeURIComponent('Olá, gostei de um produto que vi no seu site!')}`} 
-                target="_blank" >
+                target="_blank"
+                rel="noopener noreferrer" >
                   Contato
                 </a>
               </li>
