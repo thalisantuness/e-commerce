@@ -19,8 +19,8 @@ function ImovelListAdminPage() {
   return (
     <div className="admin-container">
       <ReactWhatsappButton 
-        countryCode="81" 
-        phoneNumber="92200646"
+        countryCode="55" 
+        phoneNumber="99293516"
         className="whatsapp-button"
       />
       

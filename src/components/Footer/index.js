@@ -67,7 +67,11 @@ function Footer() {
                 <Link to="/produto-list">Produtos</Link>
               </li>
               <li>
-                <a href={`https://wa.me/5599293516?text=${encodeURIComponent('Olá, gostei de um produto que vi no seu site!')}`}>Contato</a>
+                <a 
+                href={`https://wa.me/555599293516?text=${encodeURIComponent('Olá, gostei de um produto que vi no seu site!')}`} 
+                target="_blank" >
+                  Contato
+                </a>
               </li>
               {/* <li>
                 <a href="#">Sobre Nós</a>

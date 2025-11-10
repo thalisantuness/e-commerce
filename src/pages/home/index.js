@@ -52,7 +52,7 @@ function Home() {
 
   return (
     <div className="home-container">
-      <ReactWhatsappButton countryCode="81" phoneNumber="92200646" />
+      <ReactWhatsappButton countryCode="55" phoneNumber="99293516" />
       <NavBar />
       <main className="home-content">
         <BannerPrimary />

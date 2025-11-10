@@ -12,7 +12,7 @@ import "../../global.css";
 function ImovelListPage() {
   return (
     <div className="imovels-container">
-      <ReactWhatsappButton countryCode="81" phoneNumber="92200646" />
+      <ReactWhatsappButton countryCode="55" phoneNumber="99293516" />
       <NavBar />
 
       <h1>Filtre o imóvel dos seus sonhos</h1>

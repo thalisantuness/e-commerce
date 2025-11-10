@@ -79,7 +79,7 @@ function ImovelTextDetails({ imovel }) {
       
       <div className="contact-section">
         <a
-          href="https://wa.me/5581992200646?text=Ol%C3%A1%2C%20gostei%20de%20um%20im%C3%B3vel%20que%20vi%20no%20seu%20site!"
+          href={`https://wa.me/555599293516?text=${encodeURIComponent('Olá, gostei de um produto que vi no seu site!')}`}
           className="contact-button"
           target="_blank"
           rel="noopener noreferrer"
