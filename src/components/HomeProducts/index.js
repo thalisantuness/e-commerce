@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useProduto } from "../../context/ProdutoContext";
-import { FaShoppingCart, FaEye, FaBox, FaWarehouse } from "react-icons/fa";
+import { FaShoppingCart, FaEye, FaBox, FaWarehouse, FaStore } from "react-icons/fa";
 import "./styles.css";
 
 function HomeProducts() {
@@ -20,10 +20,18 @@ function HomeProducts() {
           "https://back-pdv-production.up.railway.app/produtos"
         );
         
-        // Filtrar apenas produtos do e-commerce
-        const produtosEcommerce = response.data.filter(produto => 
-          produto.menu === 'ecommerce' || produto.menu === 'ambos'
-        );
+        console.log("📦 Total de produtos retornados pela API:", response.data.length);
+        
+        // A API já filtra produtos baseado no role (clientes veem todos, empresas veem apenas os seus)
+        // Se o campo menu existir, filtrar por ele; caso contrário, aceitar todos os produtos retornados
+        const produtosEcommerce = response.data.filter(produto => {
+          // Se o produto não tem campo menu, aceitar (API já filtrou corretamente)
+          if (!produto.menu) return true;
+          // Se tem campo menu, aceitar apenas ecommerce ou ambos
+          return produto.menu === 'ecommerce' || produto.menu === 'ambos';
+        });
+        
+        console.log("✅ Produtos após filtro:", produtosEcommerce.length);
         
         setProdutos(produtosEcommerce.slice(0, 6));
         
@@ -167,7 +175,7 @@ function HomeProducts() {
   };
 
   const getProductFeatures = (produto) => {
-    return [
+    const features = [
       {
         icon: <FaBox />,
         text: `${produto.quantidade} em estoque`,
@@ -179,6 +187,17 @@ function HomeProducts() {
         className: "our-solutions-feature-text-black"
       }
     ];
+    
+    // Adicionar nome da empresa se disponível
+    if (produto.Empresa?.nome) {
+      features.push({
+        icon: <FaStore />,
+        text: produto.Empresa.nome,
+        className: "our-solutions-feature-text-black"
+      });
+    }
+    
+    return features;
   };
 
   if (loading) {

@@ -6,20 +6,29 @@ import Footer from "../../components/Footer/index";
 import ReactWhatsappButton from "react-whatsapp-button";
 import Statistics from "../../components/Statistics";
 import { getUserName } from "../../services/authService";
+import { useProduto } from "../../context/ProdutoContext";
 import "../../global.css";
 
 function Home() {
-  // Atualizar título da página com nome do usuário
+  const { empresaAtual } = useProduto();
+
+  // Atualizar título da página com nome da empresa ou usuário
   useEffect(() => {
     const updateTitle = () => {
-      const userName = getUserName();
-      const token = localStorage.getItem("token") || localStorage.getItem("auth_token");
-      
-      if (token && userName) {
-        document.title = userName;
-        console.log('📝 Título da página atualizado com nome do usuário:', userName);
+      // Prioridade: nome da empresa > nome do usuário > padrão
+      if (empresaAtual && empresaAtual.nome) {
+        document.title = empresaAtual.nome;
+        console.log('📝 Título da página atualizado com nome da empresa:', empresaAtual.nome);
       } else {
-        document.title = 'E-commerce';
+        const userName = getUserName();
+        const token = localStorage.getItem("token") || localStorage.getItem("auth_token");
+        
+        if (token && userName) {
+          document.title = userName;
+          console.log('📝 Título da página atualizado com nome do usuário:', userName);
+        } else {
+          document.title = 'Marketplace';
+        }
       }
     };
     
@@ -44,9 +53,9 @@ function Home() {
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       clearInterval(interval);
-      document.title = 'E-commerce';
+      document.title = 'Marketplace';
     };
-  }, []);
+  }, [empresaAtual]);
 
   return (
     <div className="home-container">

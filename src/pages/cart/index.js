@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaTrash, FaPlus, FaMinus, FaShoppingBag, FaArrowLeft, FaBox, FaTag, FaCheck } from "react-icons/fa";
+import { FaTrash, FaPlus, FaMinus, FaShoppingBag, FaArrowLeft, FaBox, FaTag, FaCheck, FaStore } from "react-icons/fa";
 import { useProduto } from "../../context/ProdutoContext";
 import { criarPedidosCarrinho } from "../../services/pedidoService";
 import { isAuthenticated } from "../../services/authService";
@@ -493,6 +493,12 @@ function Cart() {
                   <p className="item-description">
                     {item.tipo_comercializacao === 'Venda' ? 'Produto para venda' : 'Produto em promoção'}
                   </p>
+                  {item.Empresa?.nome && (
+                    <div className="item-category" style={{ marginTop: '4px', marginBottom: '4px' }}>
+                      <FaStore style={{ marginRight: '4px' }} />
+                      <span>{item.Empresa.nome}</span>
+                    </div>
+                  )}
                   <div className="item-category">
                     <FaTag />
                     {item.tipo_produto}

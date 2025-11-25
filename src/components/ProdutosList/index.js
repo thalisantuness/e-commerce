@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useProduto } from "../../context/ProdutoContext";
 import axios from "axios";
-import { FaShoppingCart, FaEye, FaBox, FaWarehouse, FaTimes } from "react-icons/fa";
+import { FaShoppingCart, FaEye, FaBox, FaWarehouse, FaTimes, FaStore } from "react-icons/fa";
 import "./styles.css";
 
 function ProdutosList() {
@@ -135,6 +135,8 @@ function ProdutosList() {
           "https://back-pdv-production.up.railway.app/produtos"
         );
         
+        console.log("📦 Total de produtos retornados pela API:", response.data.length);
+        
         // Debug: ver estrutura dos produtos
         if (response.data.length > 0) {
           console.log("🔍 Estrutura do primeiro produto:", response.data[0]);
@@ -147,10 +149,16 @@ function ProdutosList() {
           });
         }
         
-        // Filtrar apenas produtos do e-commerce
-        const produtosEcommerce = response.data.filter(produto => 
-          produto.menu === 'ecommerce' || produto.menu === 'ambos'
-        );
+        // A API já filtra produtos baseado no role (clientes veem todos, empresas veem apenas os seus)
+        // Se o campo menu existir, filtrar por ele; caso contrário, aceitar todos os produtos retornados
+        const produtosEcommerce = response.data.filter(produto => {
+          // Se o produto não tem campo menu, aceitar (API já filtrou corretamente)
+          if (!produto.menu) return true;
+          // Se tem campo menu, aceitar apenas ecommerce ou ambos
+          return produto.menu === 'ecommerce' || produto.menu === 'ambos';
+        });
+
+        console.log("✅ Produtos após filtro:", produtosEcommerce.length);
 
         if (produtosEcommerce.length === 0) {
           setNotFound(true);
@@ -220,7 +228,7 @@ function ProdutosList() {
   };
 
   const getProductFeatures = (produto) => {
-    return [
+    const features = [
       {
         icon: <FaBox />,
         text: `${produto.quantidade} em estoque`,
@@ -232,6 +240,17 @@ function ProdutosList() {
         className: "produto-feature-text"
       }
     ];
+    
+    // Adicionar nome da empresa se disponível
+    if (produto.Empresa?.nome) {
+      features.push({
+        icon: <FaStore />,
+        text: produto.Empresa.nome,
+        className: "produto-feature-text"
+      });
+    }
+    
+    return features;
   };
 
   if (loading) {

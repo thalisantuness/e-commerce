@@ -4,7 +4,7 @@ import Footer from "../../components/Footer";
 import { IoIosArrowBack } from "react-icons/io";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { FaBox, FaTag, FaWarehouse, FaShoppingCart, FaWhatsapp, FaMapMarkerAlt } from "react-icons/fa";
+import { FaBox, FaTag, FaWarehouse, FaShoppingCart, FaWhatsapp, FaMapMarkerAlt, FaStore } from "react-icons/fa";
 import { useProduto } from "../../context/ProdutoContext";
 import { getUserId, getAuthToken, isAuthenticated, buscarDadosUsuario } from "../../services/authService";
 import { toast, ToastContainer } from "react-toastify";
@@ -285,7 +285,12 @@ function ProductListDetails() {
       
       // Cleanup: restaurar título e favicon originais quando sair da página
       return () => {
-        document.title = 'E-commerce';
+        // Usar nome da empresa se disponível, senão usar padrão
+        if (empresa && empresa.nome) {
+          document.title = empresa.nome;
+        } else {
+          document.title = 'Marketplace';
+        }
         // Restaurar favicon padrão
         const existingFavicons = document.querySelectorAll('link[rel="icon"]');
         existingFavicons.forEach(fav => {
@@ -557,6 +562,12 @@ function ProductListDetails() {
                   <FaWarehouse className="feature-icon" />
                   <span className="product-text-black">{produto.tipo_produto}</span>
                 </div>
+                {produto.Empresa?.nome && (
+                  <div className="feature-item">
+                    <FaStore className="feature-icon" />
+                    <span className="product-text-black">{produto.Empresa.nome}</span>
+                  </div>
+                )}
               </div>
 
               <div className="property-description-details">
