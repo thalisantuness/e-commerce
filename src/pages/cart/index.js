@@ -112,8 +112,25 @@ function Cart() {
       // Limpar carrinho após confirmar pagamento
       limparCarrinho();
       
+      // Limpar campos do formulário
+      setNomeCartao('');
+      setNumeroCartao('');
+      setValidade('');
+      setCvv('');
+      setCpf('');
+      setObservacao('');
+      setPedidosCriados([]);
+      
       setShowPaymentModal(false);
+      
+      // Mostrar modal de agradecimento por 2 segundos e depois redirecionar
       setShowThankYouModal(true);
+      
+      // Redirecionar automaticamente após 2 segundos
+      setTimeout(() => {
+        setShowThankYouModal(false);
+        navigate('/meus-pedidos');
+      }, 2000);
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
       alert('Erro ao processar pagamento: ' + error.message);

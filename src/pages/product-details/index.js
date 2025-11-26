@@ -619,7 +619,7 @@ function ProductListDetails() {
                   <textarea
                     value={mensagemCustomizacao}
                     onChange={(e) => setMensagemCustomizacao(e.target.value)}
-                    placeholder="Ex: Camisa 10 nome Thalis"
+                    placeholder="Ex: Camisa 10 nome João"
                     style={{
                       width: '100%',
                       padding: '12px',

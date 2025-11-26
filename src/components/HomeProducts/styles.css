@@ -489,3 +489,25 @@
 .our-solutions-cost {
   display: none !important;
 }
+
+/* Logo da Empresa inline nas features */
+.empresa-logo-inline {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.feature-with-logo .our-solutions-feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-with-logo .our-solutions-feature-icon img {
+  margin: 0;
+}

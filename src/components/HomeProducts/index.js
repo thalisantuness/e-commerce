@@ -189,12 +189,31 @@ function HomeProducts() {
       }
     ];
     
-    // Adicionar nome da empresa se disponível
+    // Adicionar nome da empresa com logo se disponível
     if (produto.Empresa?.nome) {
+      const empresaLogo = produto.Empresa.foto_perfil || 
+                          produto.Empresa.foto_principal || 
+                          produto.Empresa.imageData || 
+                          produto.Empresa.image || 
+                          produto.Empresa.url_imagem || 
+                          produto.Empresa.avatar || 
+                          null;
+      
       features.push({
-        icon: <FaStore />,
+        icon: empresaLogo ? (
+          <img 
+            src={empresaLogo} 
+            alt={produto.Empresa.nome}
+            className="empresa-logo-inline"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'inline';
+            }}
+          />
+        ) : <FaStore />,
         text: produto.Empresa.nome,
-        className: "our-solutions-feature-text-black"
+        className: "our-solutions-feature-text-black",
+        hasLogo: !!empresaLogo
       });
     }
     
@@ -263,7 +282,7 @@ function HomeProducts() {
                   
                   <div className="our-solutions-features">
                     {getProductFeatures(produto).map((feature, index) => (
-                      <div key={index} className="our-solutions-feature">
+                      <div key={index} className={`our-solutions-feature ${feature.hasLogo ? 'feature-with-logo' : ''}`}>
                         <span className="our-solutions-feature-icon">{feature.icon}</span>
                         <span className={feature.className}>{feature.text}</span>
                       </div>

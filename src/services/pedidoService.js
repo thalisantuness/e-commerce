@@ -204,6 +204,13 @@ export async function criarPedidosCarrinho(carrinho, empresaIdPadrao, dataHoraEn
   try {
     const pedidosCriados = [];
     const erros = [];
+    
+    // Obter cliente_id do usuário logado
+    const clienteId = getUserId();
+    
+    if (!clienteId) {
+      throw new Error('Usuário não autenticado. Faça login para finalizar a compra.');
+    }
 
     for (const item of carrinho) {
       try {
@@ -222,6 +229,7 @@ export async function criarPedidosCarrinho(carrinho, empresaIdPadrao, dataHoraEn
         const pedidoData = {
           produto_id: item.produto_id,
           empresa_id: empresaId,
+          cliente_id: clienteId,
           quantidade: item.quantidade,
           ...(dataHoraEntrega ? { data_hora_entrega: dataHoraEntrega } : { data_hora_entrega: null }), // NULL permitido pelo banco
           observacao: observacaoFinal

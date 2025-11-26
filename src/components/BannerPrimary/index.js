@@ -15,13 +15,13 @@ function Highlights() {
     
     <TypeAnimation
       sequence={[
-        'Vista o amor pelo seu time.',
+        'Tudo o que você procura, em um só lugar.',
         1000, 
-        'Seu time, seu nome, seu estilo.',
+        'Seu shopping online começa aqui.',
         1000,
-        'Camisas que representam o que corre nas suas veias.',
+        'Mais escolhas, melhores preços, sempre.',
         1000,
-        'Para quem carrega o time no peito, literalmente.',
+        'Compre fácil, receba rápido, viva melhor.',
         1000
       ]}
       wrapper="h1"

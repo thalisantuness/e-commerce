@@ -8,6 +8,7 @@ background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
 url("../../assets/none-background.jpg");
 background-repeat: no-repeat; 
 background-position: center;
+background-size: 150%;
 } 
 
 .page-container h1{ 

@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaUser, FaSignOutAlt, FaShoppingCart, FaSearch, FaComments } from "react-icons/fa";
 import { useProduto } from "../../context/ProdutoContext";
 import { useChat } from "../../hooks/useChat";
-import Logo from "../../assets/logo-transparente.png";
 import "./styles.css";
 
 export default function NavBar() {
@@ -15,9 +14,7 @@ export default function NavBar() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const { calcularQuantidadeTotal, empresaAtual, setEmpresaAtual } = useProduto();
-  const [empresaLogo, setEmpresaLogo] = useState(null);
-  const [empresaNome, setEmpresaNome] = useState(null);
+  const { calcularQuantidadeTotal, setEmpresaAtual } = useProduto();
   
   // Hook de chat para notificações
   const chatHook = useChat();
@@ -68,40 +65,7 @@ export default function NavBar() {
     };
   }, []);
 
-  // Função para obter a logo da empresa
-  const getEmpresaLogo = (empresa) => {
-    if (!empresa) return null;
-    
-    const logo = empresa.logo || 
-                 empresa.logo_url ||
-                 empresa.foto_perfil || 
-                 empresa.foto_principal ||
-                 empresa.imageData ||
-                 empresa.url_logo;
-    
-    // Retornar apenas se for uma URL válida ou base64
-    if (logo && (logo.startsWith('http://') || logo.startsWith('https://') || logo.startsWith('data:image'))) {
-      return logo;
-    }
-    
-    return null;
-  };
-
-  // A empresa agora é definida pelos componentes de produtos (ProdutosList, HomeProducts, ProductDetails)
-  // Não precisamos buscar a empresa do usuário logado aqui
-
-  // Atualizar logo da empresa quando empresaAtual mudar
-  useEffect(() => {
-    if (empresaAtual) {
-      const logo = getEmpresaLogo(empresaAtual);
-      setEmpresaLogo(logo);
-      setEmpresaNome(empresaAtual.nome || empresaAtual.razao_social || empresaAtual.nome_fantasia || null);
-      console.log('🎨 Logo da empresa atualizada:', logo);
-    } else {
-      setEmpresaLogo(null);
-      setEmpresaNome(null);
-    }
-  }, [empresaAtual]);
+  // Logo fixa - sempre mostra logo-cardial.png
 
   // Limpar empresa quando sair das páginas de produtos
   // A empresa será redefinida quando entrar em páginas que carregam produtos
@@ -191,22 +155,17 @@ export default function NavBar() {
   return (
     <header className="navbar-ecommerce">
       <div className="navbar-container">
-        {/* Logo - Mostra logo da empresa se disponível, senão mostra logo padrão */}
+        {/* Logo fixa */}
         <Link to="/" className="logo-section">
-          {empresaLogo ? (
-            <img 
-              src={empresaLogo} 
-              className="logo-img" 
-              alt={empresaNome || "Logo da empresa"}
-              style={{ maxHeight: '60px', objectFit: 'contain' }}
-              onError={(e) => {
-                // Se a logo da empresa falhar, usar logo padrão
-                e.target.src = Logo;
-              }}
-            />
-          ) : (
-            <img src={Logo} className="logo-img" alt="Logo" />
-          )}
+          <img 
+            src="/logo-cardial.png" 
+            className="logo-img" 
+            alt="Logo Cardial"
+            style={{ maxHeight: '60px', objectFit: 'contain' }}
+            onError={(e) => {
+              console.error('Erro ao carregar logo:', e);
+            }}
+          />
         </Link>
 
         {/* Barra de Pesquisa */}

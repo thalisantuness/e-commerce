@@ -10,9 +10,12 @@ import {
   FaStore,
   FaCalendar
 } from "react-icons/fa";
-import { listarPedidosCliente } from "../../services/pedidoService";
+import { listarPedidosCliente, atualizarStatusPedido } from "../../services/pedidoService";
 import { isAuthenticated } from "../../services/authService";
 import { formatCurrency, formatDateTime, getStatusColor, getStatusText } from "../../utils/ecommerceHelpers";
+import { io } from 'socket.io-client';
+import { getAuthToken } from '../../services/authService';
+import { SOCKET_URL } from '../../config/apiConfig';
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import "./styles.css";
@@ -22,6 +25,7 @@ function MeusPedidos() {
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [error, setError] = useState(null);
+  const [confirmandoEntrega, setConfirmandoEntrega] = useState({});
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
@@ -58,6 +62,57 @@ function MeusPedidos() {
       console.error('Erro ao buscar pedidos:', error);
       setError(error.message);
       setLoading(false);
+    }
+  };
+
+  const handleConfirmarEntrega = async (pedido) => {
+    try {
+      setConfirmandoEntrega(prev => ({ ...prev, [pedido.pedido_id]: true }));
+
+      // Atualizar status do pedido para "entregue"
+      await atualizarStatusPedido(pedido.pedido_id, 'entregue');
+
+      // Notificar a empresa via Socket.IO
+      const token = getAuthToken();
+      if (token) {
+        const socket = io(SOCKET_URL, {
+          auth: { token }
+        });
+
+        socket.on('connect', () => {
+          // Emitir evento de confirmação de entrega para a empresa
+          socket.emit('confirmarEntrega', {
+            pedido_id: pedido.pedido_id,
+            empresa_id: pedido.empresa_id,
+            cliente_id: pedido.cliente_id,
+            produto_nome: pedido.Produto?.nome,
+            mensagem: `O cliente confirmou a entrega do pedido #${pedido.pedido_id} - ${pedido.Produto?.nome}`
+          });
+
+          // Desconectar após enviar
+          setTimeout(() => {
+            socket.disconnect();
+          }, 1000);
+        });
+
+        socket.on('error', (error) => {
+          console.error('Erro no socket ao notificar empresa:', error);
+        });
+      }
+
+      // Atualizar lista de pedidos
+      await fetchPedidos();
+
+      alert(`Entrega confirmada! A empresa ${pedido.Empresa?.nome || 'loja'} foi notificada.`);
+    } catch (error) {
+      console.error('Erro ao confirmar entrega:', error);
+      alert('Erro ao confirmar entrega: ' + (error.message || 'Tente novamente'));
+    } finally {
+      setConfirmandoEntrega(prev => {
+        const newState = { ...prev };
+        delete newState[pedido.pedido_id];
+        return newState;
+      });
     }
   };
 
@@ -306,6 +361,20 @@ function MeusPedidos() {
                       </div>
                     )}
                   </div>
+
+                  {/* Botão de Confirmar Entrega - apenas para status "em_transporte" */}
+                  {pedido.status === 'em_transporte' && (
+                    <div className="confirmar-entrega-container">
+                      <button
+                        className="confirmar-entrega-btn"
+                        onClick={() => handleConfirmarEntrega(pedido)}
+                        disabled={confirmandoEntrega[pedido.pedido_id]}
+                      >
+                        <FaCheckCircle />
+                        {confirmandoEntrega[pedido.pedido_id] ? 'Confirmando...' : 'Confirmar Entrega'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
