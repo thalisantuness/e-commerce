@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/apiConfig";
 import NavBar from "../../components/NavBar/index";
 import Footer from "../../components/Footer/index";
 import { ToastContainer, toast } from 'react-toastify';
@@ -95,7 +96,7 @@ function Cadastrar() {
       };
 
       await axios.post(
-        "https://back-pdv-production.up.railway.app/cadastrar",
+        `${API_BASE_URL}/cadastrar`,
         dadosCadastro,
         { headers: { "Content-Type": "application/json" } }
       );

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useProduto } from "../../context/ProdutoContext";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/apiConfig";
 import { FaShoppingCart, FaEye, FaBox, FaWarehouse, FaTimes, FaStore } from "react-icons/fa";
 import "./styles.css";
 
@@ -92,7 +93,7 @@ function ProdutosList() {
         
         try {
           const empresaResponse = await axios.get(
-            `https://back-pdv-production.up.railway.app/usuarios/${empresaId}`
+            `${API_BASE_URL}/usuarios/${empresaId}`
           );
           
           const empresaData = empresaResponse.data;
@@ -110,7 +111,7 @@ function ProdutosList() {
         
         try {
           const empresaResponse = await axios.get(
-            `https://back-pdv-production.up.railway.app/usuarios/${empresaId}`
+            `${API_BASE_URL}/usuarios/${empresaId}`
           );
           
           const empresaData = empresaResponse.data;
@@ -131,9 +132,9 @@ function ProdutosList() {
   useEffect(() => {
     const fetchProdutos = async () => {
       try {
-        const response = await axios.get(
-          "https://back-pdv-production.up.railway.app/produtos"
-        );
+          const response = await axios.get(
+            `${API_BASE_URL}/produtos`
+          );
         
         console.log("📦 Total de produtos retornados pela API:", response.data.length);
         

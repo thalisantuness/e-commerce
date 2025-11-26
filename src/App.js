@@ -17,6 +17,7 @@ import EditImovel from "./pages/edit-imovel-admin";
 import Cart from "./pages/cart";
 import MeusPedidos from "./pages/meus-pedidos";
 import Perfil from "./pages/perfil";
+import ChatPage from "./pages/chat";
 
 function App() {
   return (
@@ -32,6 +33,10 @@ function App() {
             <Route path="/cadastrar" element={<Cadastrar />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/meus-pedidos" element={<MeusPedidos />} />
+            <Route
+              path="/chat"
+              element={<ProtectRoute element={<ChatPage />} />}
+            />
             <Route
               path="/perfil"
               element={<ProtectRoute element={<Perfil />} />}

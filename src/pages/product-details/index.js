@@ -4,9 +4,10 @@ import Footer from "../../components/Footer";
 import { IoIosArrowBack } from "react-icons/io";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { FaBox, FaTag, FaWarehouse, FaShoppingCart, FaWhatsapp, FaMapMarkerAlt, FaStore } from "react-icons/fa";
+import { FaBox, FaTag, FaWarehouse, FaShoppingCart, FaWhatsapp, FaMapMarkerAlt, FaStore, FaComments } from "react-icons/fa";
 import { useProduto } from "../../context/ProdutoContext";
 import { getUserId, getAuthToken, isAuthenticated, buscarDadosUsuario } from "../../services/authService";
+import { API_BASE_URL } from "../../config/apiConfig";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./style.css";
@@ -110,7 +111,7 @@ function ProductListDetails() {
       try {
         if (id) {
           const response = await axios.get(
-            `https://back-pdv-production.up.railway.app/produtos/${id}`
+            `${API_BASE_URL}/produtos/${id}`
           );
           const produtoData = response.data;
           setProduto(produtoData);
@@ -195,7 +196,7 @@ function ProductListDetails() {
           if (empresaId) {
             try {
               const empresaResponse = await axios.get(
-                `https://back-pdv-production.up.railway.app/usuarios/${empresaId}`
+                `${API_BASE_URL}/usuarios/${empresaId}`
               );
               setEmpresa(empresaResponse.data);
               setEmpresaAtual(empresaResponse.data); // Atualizar empresa no contexto para o NavBar
@@ -385,7 +386,7 @@ function ProductListDetails() {
 
     try {
       await axios.put(
-        `https://back-pdv-production.up.railway.app/usuarios/${userId}`,
+        `${API_BASE_URL}/usuarios/${userId}`,
         {
           cliente_endereco: enderecoEntrega.trim()
         },
@@ -651,6 +652,35 @@ function ProductListDetails() {
                   <FaShoppingCart />
                   Adicionar ao Carrinho
                 </button>
+
+                {isAuthenticated() && produto.Empresa?.usuario_id && (
+                  <button
+                    onClick={() => navigate(`/chat?empresa_id=${produto.Empresa.usuario_id}`)}
+                    className="chat-vendedor-button"
+                    style={{
+                      width: '100%',
+                      padding: '12px 20px',
+                      backgroundColor: '#2196F3',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      transition: 'background-color 0.2s',
+                      marginTop: '12px'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#1976D2'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#2196F3'}
+                  >
+                    <FaComments />
+                    Falar com Vendedor
+                  </button>
+                )}
 
                 {isAuthenticated() && (
                   <button

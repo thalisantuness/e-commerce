@@ -5,8 +5,7 @@
 import { getAuthToken, getUserId } from './authService';
 // eslint-disable-next-line no-unused-vars
 import { filtrarPedidosEcommerce } from '../utils/ecommerceHelpers';
-
-const API_BASE_URL = "https://back-pdv-production.up.railway.app";
+import { API_BASE_URL } from '../config/apiConfig';
 
 /**
  * Cria um novo pedido

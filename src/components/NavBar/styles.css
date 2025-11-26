@@ -140,6 +140,29 @@
   width: 100%;
 }
 
+.nav-link-chat {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chat-notification-badge {
+  background: #f44336;
+  color: #fff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+}
+
 /* Área do Usuário */
 .user-section {
   display: flex;

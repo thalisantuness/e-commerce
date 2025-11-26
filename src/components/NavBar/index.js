@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { FaUser, FaSignOutAlt, FaShoppingCart, FaSearch } from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaShoppingCart, FaSearch, FaComments } from "react-icons/fa";
 import { useProduto } from "../../context/ProdutoContext";
+import { useChat } from "../../hooks/useChat";
 import Logo from "../../assets/logo-transparente.png";
 import "./styles.css";
 
@@ -17,6 +18,10 @@ export default function NavBar() {
   const { calcularQuantidadeTotal, empresaAtual, setEmpresaAtual } = useProduto();
   const [empresaLogo, setEmpresaLogo] = useState(null);
   const [empresaNome, setEmpresaNome] = useState(null);
+  
+  // Hook de chat para notificações
+  const chatHook = useChat();
+  const mensagensNaoLidas = isLoggedIn ? chatHook.mensagensNaoLidas : 0;
 
   // Função para carregar dados do usuário
   const loadUserData = () => {
@@ -242,7 +247,16 @@ export default function NavBar() {
           <Link to="/produto-list" className="nav-link">Produtos</Link>
           {/* <Link to="/imovel-list" className="nav-link">Imóveis</Link> */}
           {isLoggedIn && (
-            <Link to="/meus-pedidos" className="nav-link">Meus Pedidos</Link>
+            <>
+              <Link to="/meus-pedidos" className="nav-link">Meus Pedidos</Link>
+              <Link to="/chat" className="nav-link nav-link-chat">
+                <FaComments />
+                Chat
+                {mensagensNaoLidas > 0 && (
+                  <span className="chat-notification-badge">{mensagensNaoLidas}</span>
+                )}
+              </Link>
+            </>
           )}
         </nav>
 

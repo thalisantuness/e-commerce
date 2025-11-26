@@ -2,7 +2,7 @@
  * Serviço de autenticação e gerenciamento de token
  */
 
-const API_BASE_URL = "https://back-pdv-production.up.railway.app";
+import { API_BASE_URL } from '../config/apiConfig';
 
 /**
  * Faz login do usuário

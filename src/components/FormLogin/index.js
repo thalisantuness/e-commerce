@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/apiConfig";
 import "./styles.css";
 import { ToastContainer, toast } from 'react-toastify';
 
@@ -22,7 +23,7 @@ export default function FormLogin() {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://back-pdv-production.up.railway.app/login",
+        `${API_BASE_URL}/login`,
         formData,
         { headers: { "Content-Type": "application/json" } }
       ); 
