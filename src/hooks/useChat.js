@@ -15,6 +15,7 @@ export function useChat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mensagensNaoLidas, setMensagensNaoLidas] = useState(0);
+  const [naoLidasPorConversa, setNaoLidasPorConversa] = useState({}); // { conversa_id: count }
   const socketRef = useRef(null);
 
   // Inicializar Socket.IO
@@ -38,21 +39,28 @@ export function useChat() {
     socketRef.current.on('receivedMessage', (mensagemData) => {
       console.log('📨 Mensagem recebida:', mensagemData);
       
-      // Se a conversa atual está aberta, adicionar mensagem
+      // Se a conversa atual está aberta, recarregar mensagens para garantir dados completos do remetente
       if (conversaAtual && mensagemData.conversa_id === conversaAtual.conversa_id) {
-        setMensagens(prev => {
-          // Evitar duplicatas
-          if (prev.some(msg => msg.mensagem_id === mensagemData.mensagem_id)) {
-            return prev;
-          }
-          return [...prev, mensagemData];
-        });
+        // Recarregar mensagens da conversa para garantir que temos os dados completos do Remetente
+        // Isso garante que nome e foto do remetente estejam presentes
+        listarMensagens(conversaAtual.conversa_id)
+          .then((mensagensCompletas) => {
+            // Ordenar por data (mais antiga primeiro)
+            const ordenadas = mensagensCompletas.sort((a, b) => 
+              new Date(a.data_envio) - new Date(b.data_envio)
+            );
+            setMensagens(ordenadas);
 
-        // Marcar como lida se não foi enviada por mim
-        const userId = getUserId();
-        if (mensagemData.remetente_id !== userId && !mensagemData.lida) {
-          marcarMensagemComoLida(mensagemData.mensagem_id).catch(console.error);
-        }
+            // Marcar como lida se não foi enviada por mim
+            const userId = getUserId();
+            if (mensagemData.remetente_id !== userId && !mensagemData.lida) {
+              marcarMensagemComoLida(mensagemData.mensagem_id).catch(console.error);
+            }
+          })
+          .catch(console.error);
+      } else {
+        // Se a conversa não está aberta, apenas atualizar contadores
+        // Não adicionar mensagem ao estado se a conversa não está aberta
       }
 
       // Atualizar lista de conversas
@@ -144,25 +152,31 @@ export function useChat() {
     const userId = getUserId();
     if (!token || !userId) {
       setMensagensNaoLidas(0);
+      setNaoLidasPorConversa({});
       return; // Não fazer requisição se não estiver autenticado
     }
 
     try {
       const conversas = await listarConversas();
       let total = 0;
+      const porConversa = {};
 
       for (const conversa of conversas) {
         const mensagens = await listarMensagens(conversa.conversa_id);
         const naoLidas = mensagens.filter(
           msg => !msg.lida && msg.remetente_id !== userId
         );
-        total += naoLidas.length;
+        const count = naoLidas.length;
+        total += count;
+        porConversa[conversa.conversa_id] = count;
       }
 
       setMensagensNaoLidas(total);
+      setNaoLidasPorConversa(porConversa);
     } catch (err) {
       console.error('Erro ao contar mensagens não lidas:', err);
       setMensagensNaoLidas(0);
+      setNaoLidasPorConversa({});
     }
   }, []);
 
@@ -239,6 +253,7 @@ export function useChat() {
     loading,
     error,
     mensagensNaoLidas,
+    naoLidasPorConversa,
     atualizarConversas,
     abrirConversa,
     novaConversa,

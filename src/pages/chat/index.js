@@ -23,6 +23,7 @@ function ChatPage() {
     loading,
     error,
     mensagensNaoLidas,
+    naoLidasPorConversa,
     atualizarConversas,
     abrirConversa,
     novaConversa,
@@ -126,12 +127,13 @@ function ChatPage() {
                   </button>
                 </div>
               ) : (
-                <ConversasList
-                  conversas={conversas}
-                  conversaAtual={conversaAtual}
-                  onSelectConversa={handleSelectConversa}
-                  mensagensNaoLidas={mensagensNaoLidas}
-                />
+                        <ConversasList
+                          conversas={conversas}
+                          conversaAtual={conversaAtual}
+                          onSelectConversa={handleSelectConversa}
+                          mensagensNaoLidas={mensagensNaoLidas}
+                          naoLidasPorConversa={naoLidasPorConversa}
+                        />
               )}
             </div>
           )}

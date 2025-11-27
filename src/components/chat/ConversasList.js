@@ -2,7 +2,7 @@ import React from 'react';
 import { getUserId } from '../../services/authService';
 import './chat.css';
 
-function ConversasList({ conversas, conversaAtual, onSelectConversa, mensagensNaoLidas }) {
+function ConversasList({ conversas, conversaAtual, onSelectConversa, mensagensNaoLidas, naoLidasPorConversa = {} }) {
   const userId = getUserId();
 
   // Obter informações do outro usuário na conversa
@@ -99,7 +99,12 @@ function ConversasList({ conversas, conversaAtual, onSelectConversa, mensagensNa
                 {/* Aqui podemos adicionar preview da última mensagem quando disponível */}
               </p>
             </div>
-            {/* Badge de notificações não lidas pode ser adicionado aqui */}
+            {/* Badge de notificações não lidas */}
+            {naoLidasPorConversa[conversa.conversa_id] > 0 && (
+              <span className="conversa-badge">
+                {naoLidasPorConversa[conversa.conversa_id] > 99 ? '99+' : naoLidasPorConversa[conversa.conversa_id]}
+              </span>
+            )}
           </div>
         );
       })}

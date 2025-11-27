@@ -4,7 +4,6 @@ import BannerPrimary from "../../components/BannerPrimary/index";
 import HomeProducts from "../../components/HomeProducts/index";
 import Footer from "../../components/Footer/index";
 import ReactWhatsappButton from "react-whatsapp-button";
-import Statistics from "../../components/Statistics";
 import { getUserName } from "../../services/authService";
 import { useProduto } from "../../context/ProdutoContext";
 import "../../global.css";
@@ -64,7 +63,6 @@ function Home() {
       <main className="home-content">
         <BannerPrimary />
         <HomeProducts />
-        <Statistics />
         {/* <Blog /> */}
         {/* <Companies /> */}
       </main>
